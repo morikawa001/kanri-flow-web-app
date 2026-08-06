@@ -20,13 +20,16 @@
 .assist-highlight{border-color:var(--error)!important;box-shadow:0 0 0 3px rgba(181,52,130,.15)!important;animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(181,52,130,.15)}50%{box-shadow:0 0 0 5px rgba(181,52,130,.25)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+html[data-theme="light"] body.page-apply{--primary:#2b7cd3;--primary-2:#2563ab;--primary-light:#e7f1fb;--primary-glow:rgba(43,124,211,.15)}
+html[data-theme="dark"] body.page-apply{--primary:#4fa3e8;--primary-2:#79b9f0;--primary-light:#1b3a5c;--primary-glow:rgba(79,163,232,.2)}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
 <script src="https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js"></script>
 </head>
-<body>
+<body class="page-apply">
 <div class="app">
 <header class="topbar">
 <div class="brand">
@@ -56,7 +59,7 @@
 </div>
 </header>
 <section class="headline">
-<h2 id="headlineTitle">起案フロー：入口入力からフォルダZIP・台帳CSV作成まで</h2>
+<h2 id="headlineTitle">申請管理者報告起案：入口入力から台帳CSV・フォルダZIP作成まで</h2>
 <p id="headlineText">研究課題名・研究責任者などの共通情報を最初に入力し、複数依頼は1件ずつ管理します。台帳CSVを読み込むと途中から再開できます。</p>
 </section>
 <section class="flow-guide" id="flowGuide"></section>
@@ -66,7 +69,7 @@
 </main>
 </div>
 <script>var pageMode = 'apply';</script>
-<script src="common.js?v=92f1ea6"></script>
+<script src="common.js?v=7b0f0ba"></script>
 <script src="state.js?v=4b1851b"></script>
 <script src="utils.js?v=4b1851b"></script>
 <script src="dates.js?v=4b1851b"></script>
@@ -325,7 +328,7 @@ ${requestRowsData().map((r,i)=>{
    const fs=folderSetFor(r);
    return `<div class="template-card" style="margin-top:.7rem">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.55rem">
-<strong style="font-size:.82rem">依頼 ${i+1}：${h(r.type)}</strong><span class="badge">${h(`${fs.no}_${outputCategory(r.type)}`)}</span></div>
+<strong style="font-size:.82rem">依頼 ${i+1}：${h(reportTypeLabel(r.type))}</strong><span class="badge">${h(`${fs.no}_${outputCategory(r.type)}`)}</span></div>
 <div class="grid-2">
 <div class="field"><label>申請フォルダ名</label><input class="input readonly" readonly value="${h(fs.apply)}"></div>
 <div class="field"><label>CSCC側申請フォルダ名</label><input class="input readonly" readonly value="${h(fs.cscc)}"></div>
@@ -381,7 +384,7 @@ ${requestRowsData().map((r,i)=>{
 </div>
 <div class="section-title">選択中の行に対応するCSCC側フォルダ</div>
 ${(state.selectedLedgerIndexes||[]).length
-  ? requestRowsData().map((r,i)=>{const fs=folderSetFor(r);return `<div class="file-row"><strong>依頼${i+1}：${h(r.type)}</strong><span>${h(fs.cscc)}</span></div>`;}).join('')
+  ? requestRowsData().map((r,i)=>{const fs=folderSetFor(r);return `<div class="file-row"><strong>依頼${i+1}：${h(reportTypeLabel(r.type))}</strong><span>${h(fs.cscc)}</span></div>`;}).join('')
   : '<div class="help">台帳行を選択すると、対象フォルダがここに表示されます。</div>'}`
     : stage.id==='path'
       ? `
@@ -446,8 +449,8 @@ ${(()=>{
 ${notesHtml?`<div class="note-list" style="margin-bottom:.75rem">${notesHtml}</div>`:''}
 ${stage.id==='intake'
   ? `<div class="template-card" style="margin-bottom:.75rem">
-<div class="help" style="margin-bottom:.6rem">JRCTページ（<code>jrct.mhlw.go.jp</code>）の内容をコピー＆貼り付けて、研究課題名・研究責任者などを自動入力します。<br>手順：JRCTページで <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
-<textarea class="textarea" id="jrctHtmlInput" placeholder="JRCTページのHTMLをここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
+<div class="help" style="margin-bottom:.6rem">実施承認申請書の内容をコピー＆貼り付けて、研究課題名・研究責任者などを自動入力します。<br>手順：実施承認申請書を開いて <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
+<textarea class="textarea" id="jrctHtmlInput" placeholder="実施承認申請書の内容をここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
 <div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
 <button type="button" class="primary-btn" id="jrctParseBtn">貼り付けて自動入力</button>
 <span class="help" id="jrctParseStatus"></span>
@@ -500,8 +503,8 @@ ${generatedHTML}
     document.getElementById('jrctParseBtn')?.addEventListener('click',()=>{
       const input=document.getElementById('jrctHtmlInput');
       const html=input?.value?.trim();
-      if(!html){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='テキストエリアにJRCTページの内容を貼り付けてください。';s.style.color='var(--warn)';}return;}
-      if(!html.includes('jRCT')&&!html.includes('臨床研究')){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='JRCTページの内容が見つかりません。正しいページをコピーしてください。';s.style.color='var(--error)';}return;}
+      if(!html){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='テキストエリアに実施承認申請書の内容を貼り付けてください。';s.style.color='var(--warn)';}return;}
+      if(!html.includes('jRCT')&&!html.includes('臨床研究')){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='実施承認申請書の内容が見つかりません。正しい内容をコピーしてください。';s.style.color='var(--error)';}return;}
       try{
         const data=parseJRCTHtml(html);
         const filled=Object.values(data).filter(Boolean).length;
@@ -621,7 +624,7 @@ jRCT番号：${h(getValue('jrctNo')||'')}
     <div class="card-bd template-block">
       ${rows.map((r,i)=>{
         const fs=folderSetFor(r);
-        return `<div class="template-card"><h4>依頼 ${i+1}：${h(r.type)}</h4><div class="mono">申請：${h(fs.apply)}
+        return `<div class="template-card"><h4>依頼 ${i+1}：${h(reportTypeLabel(r.type))}</h4><div class="mono">申請：${h(fs.apply)}
 CSCC側：${h(fs.cscc)}
 管理者側：${h(fs.manager)}</div></div>`;
       }).join('')}
@@ -645,7 +648,7 @@ CSCC側：${h(fs.cscc)}
 
       return `
         <div class="template-card">
-          <h4>依頼 ${i+1}：${h(no)} / ${h(r.type)}</h4>
+          <h4>依頼 ${i+1}：${h(no)} / ${h(reportTypeLabel(r.type))}</h4>
 
           <div class="section-title">命名規則</div>
           <div class="help">この依頼で想定するNAS格納ファイル名です。</div>
@@ -703,7 +706,7 @@ CSCC側：${h(fs.cscc)}
         <div class="template-card" style="background:var(--surface);padding:.8rem">
           <h4>依頼 ${i+1}</h4>
           <div class="mono">起案番号：${h(requestOutputNo(r))}
-報告区分：${h(r.type)}
+報告区分：${h(reportTypeLabel(r.type))}
 研究題名：${h(getValue('studyTitle')||'')}
 研究責任者：${h([getValue('managerAffil1'),getValue('managerDept1'),getValue('managerTitle1'),getValue('managerName1')].filter(Boolean).join(' '))}
 ${r.type==='定期報告'?'報告期間':'公表日'}：${h(formatDateToJapanese(r.date||''))}
@@ -820,7 +823,7 @@ jRCT URL：${h(r.url||'')}</div>
     <div class="card-hd"><h3>管理者側パス確定</h3><span class="badge">最終格納</span></div>
     <div class="card-bd template-block">
       ${rows.map((r,i)=>`<div class="template-card">
-        <h4>依頼 ${i+1}：${h(r.type)} / ${h(requestOutputNo(r))}</h4>
+        <h4>依頼 ${i+1}：${h(reportTypeLabel(r.type))} / ${h(requestOutputNo(r))}</h4>
         <div class="field"><label>管理者側フォルダパス</label>
         <input class="input mgr-path-input" data-path-idx="${i}" value="${h(paths[i]||'')}" placeholder="例：\\\\NAS\\\\管理者側\\\\特2025-17_2-2_申請"></div>
       </div>`).join('')}
@@ -944,6 +947,25 @@ function parseJRCTHtml(input){
     }
     return results;
   }
+  function findBlock(label,endLabels){
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i];
+      if(!line.includes(label)) continue;
+      const block=[line.replace(label,'').replace(/^[\s\t：:　]+/,'')];
+      for(let j=i+1;j<lines.length;j++){
+        if(endLabels.some(L=>lines[j].includes(L))) break;
+        block.push(lines[j]);
+      }
+      return block;
+    }
+    return [];
+  }
+  function checkedItem(text,item){
+    const re=new RegExp('([■☑☒□])\\s*'+item);
+    const m=text.match(re);
+    if(!m) return undefined;
+    return /[■☑☒]/.test(m[1]);
+  }
   data.mailSubject=findVal('平易な研究名称')||findVal('Public Title');
   data.studyTitle=findVal('研究名称')||findVal('Scientific Title');
   data.managerName1=(findVal('統括管理者の氏名')||'').replace(/\s{2,}/g,' ').replace(/^[\s\u3000]+|[\s\u3000]+$/g,'');
@@ -976,6 +998,40 @@ function parseJRCTHtml(input){
     else{m=pubDateText.match(/(\d{4})年(\d+)月(\d+)日/);if(m) data.pubDate=m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}}
   }
   data.jrctUrl='https://jrct.mhlw.go.jp/latest-detail/'+(data.jrctNo||'');
+  // JRCT申請書形式（起案文と同構造）の解析
+  const piLine=findVal('研究責任医師');
+  if(piLine){
+    const piParts=piLine.split(/[\s\u3000]+/).filter(Boolean);
+    if(piParts.length>=3){
+      data.managerDept1=piParts[0];
+      data.managerTitle1=piParts[1];
+      data.managerName1=piParts.slice(2).join(' ');
+    }
+  }
+  data.studyTitle=findVal('研究課題名')||data.studyTitle;
+  const planNo=findVal('実施計画番号');
+  if(planNo){const m=planNo.match(/jRCT\w+/);if(m) data.jrctNo=m[0];}
+  const typeBlock=findBlock('研究の種別',['申請内容','審査結果','備考']);
+  if(typeBlock.length){
+    const typeText=typeBlock.join('\n');
+    const sp=checkedItem(typeText,'特定臨床研究');
+    if(sp!==undefined) data.isSpecific=sp;
+    const ns=checkedItem(typeText,'非特定臨床研究');
+    if(ns!==undefined) data.isNonspecific=ns;
+    const ua=checkedItem(typeText,'未承認・適応外');
+    if(ua!==undefined) data.isUnapproved=ua;
+    const fd=checkedItem(typeText,'資金提供');
+    if(fd!==undefined) data.isFunding=fd;
+  }
+  const contentBlock=findBlock('申請内容',['審査結果','備考']);
+  if(contentBlock.length) data.content=contentBlock.join('\n');
+  const resultLine=findVal('審査結果');
+  if(resultLine){
+    const m=resultLine.match(/CRB4180010-\s*([^\s（）]+)/);
+    if(m) data.base=m[1];
+  }
+  const notesBlock=findBlock('備考',[]);
+  if(notesBlock.length) data.notes=notesBlock.join('\n');
   return data;
 }
 function applyJRCTData(data){
@@ -1028,14 +1084,19 @@ function applyJRCTData(data){
   if(data.jrctUrl&&state.requestRows&&state.requestRows[0]){
     state.requestRows[0].url=data.jrctUrl;
   }
+  if(state.requestRows&&state.requestRows[0]){
+    if(data.base) state.requestRows[0].base=data.base;
+    if(data.content) state.requestRows[0].content=data.content;
+    if(data.notes) state.requestRows[0].notes=data.notes;
+  }
   renderAll();
 }
 const ASSIST_DATA = {
   intake:{
     title:'こんにちは！入力をサポートします',
     steps:[
-      'まず、jRCTのページを開いてください。ページ内のテキストをすべて選択（Ctrl+A）してコピー（Ctrl+C）します。',
-      '次に、下の「JRCTページの内容をここに貼り付けてください」と書かれた枠の中に貼り付け（Ctrl+V）ます。',
+      'まず、実施承認申請書を開いてください。内容をすべて選択（Ctrl+A）してコピー（Ctrl+C）します。',
+      '次に、下の「実施承認申請書の内容をここに貼り付けてください」と書かれた枠の中に貼り付け（Ctrl+V）ます。',
       '「貼り付けて自動入力」ボタンを押すと、研究課題名や研究責任者が自動で入力されます。',
       '残りの項目（研究略称、研究区分、起案者名など）を確認して入力してください。',
       '画面下部の「複数依頼の同時入力」エリアで、報告区分と元の起案番号を設定します。'
