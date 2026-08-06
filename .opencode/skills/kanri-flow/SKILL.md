@@ -50,10 +50,36 @@ git push kanri_flow master:main # Pages用リポジトリへ（master→mainに�
 
 **よくあるミス**: `origin`だけpushして `kanri_flow` へのpushを忘れると、Webサイト（GitHub Pages）は更新されない。
 
-## GitHub Pages
+## GitHub Pages（GitHub Actions方式）
 - デプロイ先: `https://morikawa001.github.io/kanri_flow/`
 - ページ間の遷移はGitHub PagesのURLを使用
-- 自動デプロイ完了まで約1〜2分かかる
+- **デプロイ方式: GitHub Actions**（`.github/workflows/pages.yml`）。`kanri_flow/main` へのpushで自動デプロイ
+- デプロイ完了まで約2〜3分（legacyビルドの不安定問題を回避するため2026-08-06に切り替え済み）
+- `build_type: workflow` に設定済み（legacyビルドは無効）
+
+### デプロイ確認
+```bash
+# ① デプロイワークフローの状態を確認
+gh run list --repo morikawa001/kanri_flow --limit 1
+
+# ② デプロイ済みページをキャッシュ回避で確認
+# https://morikawa001.github.io/kanri_flow/?v=2c4a23c
+```
+
+## 運用メモ（2026-08-06 時点・再開用）
+
+### 現在の状態
+- `master` / `kanri_flow/main` は **`2c4a23c`**（GitHub Actions方式へ切り替え済みの安定版）
+- Pagesの`build_type`を `legacy` → `workflow` に切り替え、`.github/workflows/pages.yml` + `.nojekyll` を追加
+- 旧安定版 `c5dedff`（申請・公表分離前）からは、巻き戻した18コミット分
+  （apply_report改善・docx差し込みタグ・JRCT自動入力・publish復元・.nojekyll）は
+  **`backup/20260806-apply-improvements`**（= `5da734d`）に保存し、originへpush済み
+- `kanri_flow` の不要な `master` ブランチは削除済み（`main` のみ）
+
+### 注意点
+- `apply_report.html` は c5dedff時点＝**改善前**に戻っている。apply側の改善を復元する場合は
+  バックアップブランチから該当ファイル（`apply_report.html` / `common.js` / `identifiers.js` 等）を抽出する
+- legacyビルドは不安定だった（2026-08-06に`errored`/長時間`building`が多発）。現在はActions方式のため影響なし
 
 ## 主な機能
 1. テーマ切替（ライト/ダーク）
