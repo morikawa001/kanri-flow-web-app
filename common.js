@@ -142,9 +142,9 @@ function setRequestRow(idx, key, val) {
   state.requestRows[idx][key] = val;
 }
 
-// 依頼行の出力番号を計算
+// 依頼行の出力番号を計算（生成後の起案番号は元の起案番号と同じ）
 function requestOutputNo(r) {
-  return incrementLastBranch(r.base || '特2025-17_2-1', r.type === '軽微変更') || (r.base || '特2025-17_2-1');
+  return r.base || '特2025-17_2-1';
 }
 
 // 複数依頼行の共通プレフィックスを生成
@@ -440,6 +440,13 @@ function studyCategoryLabel() {
   if (specific && nonspecific) return '特定臨床研究・非特定臨床研究' + (opts.length ? '（' + opts.join('・') + '）' : '');
   if (specific) return '特定臨床研究' + (opts.length ? '（' + opts.join('・') + '）' : '');
   if (nonspecific) return '非特定臨床研究';
+  return '';
+}
+
+// docx差し込み用の研究区分ラベル（特定→特定臨床研究、非特定→非特定臨床研究）
+function docxStudyCategoryLabel() {
+  if (!!state.studyTypeSpecific) return '特定臨床研究';
+  if (!!state.studyTypeNonspecific) return '非特定臨床研究';
   return '';
 }
 
@@ -961,6 +968,7 @@ function reportDocxDataForRow(r) {
     '職名': safeDocxText(getValue('managerTitle1') || ''),
     '氏名': safeDocxText(getValue('managerName1') || ''),
     '研究題名': safeDocxText(getValue('studyTitle') || ''),
+    '研究区分': safeDocxText(docxStudyCategoryLabel()),
     '作成年': safeDocxText(today.year),
     '作成月': safeDocxText(today.month),
     '作成日': safeDocxText(today.day),
@@ -1302,6 +1310,7 @@ function docxDataForRow(r) {
     '職名': safeDocxText(getValue('managerTitle1') || ''),
     '氏名': safeDocxText(getValue('managerName1') || ''),
     '研究題名': safeDocxText(getValue('studyTitle') || ''),
+    '研究区分': safeDocxText(docxStudyCategoryLabel()),
 
     '報告区分': joinDocxLines(targetRows.map(function(x) { return x?.type || ''; })),
 

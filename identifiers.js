@@ -59,9 +59,9 @@ App.identifiers = (function() {
     state.requestRows[idx][key] = val;
   }
 
-  // 依頼行の出力番号を計算
+  // 依頼行の出力番号を計算（生成後の起案番号は元の起案番号と同じ）
   function requestOutputNo(r) {
-    return incrementLastBranch(r.base || '特2025-17_2-1', r.type === '軽微変更') || (r.base || '特2025-17_2-1');
+    return r.base || '特2025-17_2-1';
   }
 
   // 複数依頼行の共通プレフィックスを生成
