@@ -449,8 +449,8 @@ ${(()=>{
 ${notesHtml?`<div class="note-list" style="margin-bottom:.75rem">${notesHtml}</div>`:''}
 ${stage.id==='intake'
   ? `<div class="template-card" style="margin-bottom:.75rem">
-<div class="help" style="margin-bottom:.6rem">JRCTページ（<code>jrct.mhlw.go.jp</code>）の内容をコピー＆貼り付けて、研究課題名・研究責任者などを自動入力します。<br>手順：JRCTページで <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
-<textarea class="textarea" id="jrctHtmlInput" placeholder="JRCTページのHTMLをここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
+<div class="help" style="margin-bottom:.6rem">実施承認申請書の内容をコピー＆貼り付けて、研究課題名・研究責任者などを自動入力します。<br>手順：実施承認申請書を開いて <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
+<textarea class="textarea" id="jrctHtmlInput" placeholder="実施承認申請書の内容をここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
 <div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
 <button type="button" class="primary-btn" id="jrctParseBtn">貼り付けて自動入力</button>
 <span class="help" id="jrctParseStatus"></span>
@@ -503,8 +503,8 @@ ${generatedHTML}
     document.getElementById('jrctParseBtn')?.addEventListener('click',()=>{
       const input=document.getElementById('jrctHtmlInput');
       const html=input?.value?.trim();
-      if(!html){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='テキストエリアにJRCTページの内容を貼り付けてください。';s.style.color='var(--warn)';}return;}
-      if(!html.includes('jRCT')&&!html.includes('臨床研究')){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='JRCTページの内容が見つかりません。正しいページをコピーしてください。';s.style.color='var(--error)';}return;}
+      if(!html){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='テキストエリアに実施承認申請書の内容を貼り付けてください。';s.style.color='var(--warn)';}return;}
+      if(!html.includes('jRCT')&&!html.includes('臨床研究')){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='実施承認申請書の内容が見つかりません。正しい内容をコピーしてください。';s.style.color='var(--error)';}return;}
       try{
         const data=parseJRCTHtml(html);
         const filled=Object.values(data).filter(Boolean).length;
@@ -1095,8 +1095,8 @@ const ASSIST_DATA = {
   intake:{
     title:'こんにちは！入力をサポートします',
     steps:[
-      'まず、jRCTのページを開いてください。ページ内のテキストをすべて選択（Ctrl+A）してコピー（Ctrl+C）します。',
-      '次に、下の「JRCTページの内容をここに貼り付けてください」と書かれた枠の中に貼り付け（Ctrl+V）ます。',
+      'まず、実施承認申請書を開いてください。内容をすべて選択（Ctrl+A）してコピー（Ctrl+C）します。',
+      '次に、下の「実施承認申請書の内容をここに貼り付けてください」と書かれた枠の中に貼り付け（Ctrl+V）ます。',
       '「貼り付けて自動入力」ボタンを押すと、研究課題名や研究責任者が自動で入力されます。',
       '残りの項目（研究略称、研究区分、起案者名など）を確認して入力してください。',
       '画面下部の「複数依頼の同時入力」エリアで、報告区分と元の起案番号を設定します。'
