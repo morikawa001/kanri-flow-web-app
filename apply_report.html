@@ -947,6 +947,25 @@ function parseJRCTHtml(input){
     }
     return results;
   }
+  function findBlock(label,endLabels){
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i];
+      if(!line.includes(label)) continue;
+      const block=[line.replace(label,'').replace(/^[\s\t：:　]+/,'')];
+      for(let j=i+1;j<lines.length;j++){
+        if(endLabels.some(L=>lines[j].includes(L))) break;
+        block.push(lines[j]);
+      }
+      return block;
+    }
+    return [];
+  }
+  function checkedItem(text,item){
+    const re=new RegExp('([■☑☒□])\\s*'+item);
+    const m=text.match(re);
+    if(!m) return undefined;
+    return /[■☑☒]/.test(m[1]);
+  }
   data.mailSubject=findVal('平易な研究名称')||findVal('Public Title');
   data.studyTitle=findVal('研究名称')||findVal('Scientific Title');
   data.managerName1=(findVal('統括管理者の氏名')||'').replace(/\s{2,}/g,' ').replace(/^[\s\u3000]+|[\s\u3000]+$/g,'');
@@ -979,6 +998,40 @@ function parseJRCTHtml(input){
     else{m=pubDateText.match(/(\d{4})年(\d+)月(\d+)日/);if(m) data.pubDate=m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}}
   }
   data.jrctUrl='https://jrct.mhlw.go.jp/latest-detail/'+(data.jrctNo||'');
+  // JRCT申請書形式（起案文と同構造）の解析
+  const piLine=findVal('研究責任医師');
+  if(piLine){
+    const piParts=piLine.split(/[\s\u3000]+/).filter(Boolean);
+    if(piParts.length>=3){
+      data.managerDept1=piParts[0];
+      data.managerTitle1=piParts[1];
+      data.managerName1=piParts.slice(2).join(' ');
+    }
+  }
+  data.studyTitle=findVal('研究課題名')||data.studyTitle;
+  const planNo=findVal('実施計画番号');
+  if(planNo){const m=planNo.match(/jRCT\w+/);if(m) data.jrctNo=m[0];}
+  const typeBlock=findBlock('研究の種別',['申請内容','審査結果','備考']);
+  if(typeBlock.length){
+    const typeText=typeBlock.join('\n');
+    const sp=checkedItem(typeText,'特定臨床研究');
+    if(sp!==undefined) data.isSpecific=sp;
+    const ns=checkedItem(typeText,'非特定臨床研究');
+    if(ns!==undefined) data.isNonspecific=ns;
+    const ua=checkedItem(typeText,'未承認・適応外');
+    if(ua!==undefined) data.isUnapproved=ua;
+    const fd=checkedItem(typeText,'資金提供');
+    if(fd!==undefined) data.isFunding=fd;
+  }
+  const contentBlock=findBlock('申請内容',['審査結果','備考']);
+  if(contentBlock.length) data.content=contentBlock.join('\n');
+  const resultLine=findVal('審査結果');
+  if(resultLine){
+    const m=resultLine.match(/CRB4180010-\s*([^\s（）]+)/);
+    if(m) data.base=m[1];
+  }
+  const notesBlock=findBlock('備考',[]);
+  if(notesBlock.length) data.notes=notesBlock.join('\n');
   return data;
 }
 function applyJRCTData(data){
@@ -1030,6 +1083,11 @@ function applyJRCTData(data){
   }
   if(data.jrctUrl&&state.requestRows&&state.requestRows[0]){
     state.requestRows[0].url=data.jrctUrl;
+  }
+  if(state.requestRows&&state.requestRows[0]){
+    if(data.base) state.requestRows[0].base=data.base;
+    if(data.content) state.requestRows[0].content=data.content;
+    if(data.notes) state.requestRows[0].notes=data.notes;
   }
   renderAll();
 }
