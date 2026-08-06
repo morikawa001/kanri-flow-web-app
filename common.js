@@ -137,8 +137,8 @@ function requestRowsData() {
 // 依頼行のフィールドを設定
 function setRequestRow(idx, key, val) {
   if (!state.requestRows || !state.requestRows.length)
-    state.requestRows = [{type:'初回公表',base:'特2025-17_2-1',date:'',url:''}];
-  if (!state.requestRows[idx]) state.requestRows[idx] = {type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''};
+    state.requestRows = [{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:'',content:'',notes:''}];
+  if (!state.requestRows[idx]) state.requestRows[idx] = {type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:'',content:'',notes:''};
   state.requestRows[idx][key] = val;
 }
 
@@ -745,7 +745,7 @@ function selectAllLedgerRows() {
 // 台帳行選択をクリア
 function clearLedgerRowSelection() {
   state.selectedLedgerIndexes = [];
-  state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: ''}];
+  state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
   renderAll();
 }
 
@@ -969,6 +969,8 @@ function reportDocxDataForRow(r) {
     '氏名': safeDocxText(getValue('managerName1') || ''),
     '研究題名': safeDocxText(getValue('studyTitle') || ''),
     '研究区分': safeDocxText(docxStudyCategoryLabel()),
+    '申請内容': safeDocxText(relatedRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n')),
+    '備考': safeDocxText(relatedRows.map(function(x) { return x?.notes || ''; }).filter(Boolean).join('\n')),
     '作成年': safeDocxText(today.year),
     '作成月': safeDocxText(today.month),
     '作成日': safeDocxText(today.day),
@@ -1311,6 +1313,8 @@ function docxDataForRow(r) {
     '氏名': safeDocxText(getValue('managerName1') || ''),
     '研究題名': safeDocxText(getValue('studyTitle') || ''),
     '研究区分': safeDocxText(docxStudyCategoryLabel()),
+    '申請内容': safeDocxText(targetRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n')),
+    '備考': safeDocxText(targetRows.map(function(x) { return x?.notes || ''; }).filter(Boolean).join('\n')),
 
     '報告区分': joinDocxLines(targetRows.map(function(x) { return x?.type || ''; })),
 
@@ -1912,7 +1916,7 @@ function renderRequestRows(hostOverride) {
   if (!hosts.length) return;
   var primaryHost = hostOverride || hosts[0];
   if (!state.requestRows || !state.requestRows.length)
-    state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: ''}];
+    state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
   var requestHtml = requestRowsData().map(function(r, i) {
     var isPeriodic = r.type === '定期報告';
     var dateLabel = isPeriodic ? '報告期間' : '公表日';
@@ -1946,6 +1950,14 @@ function renderRequestRows(hostOverride) {
       '</div>' +
       '<div class="field" style="margin-top:.7rem"><label>jRCT URL</label>' +
       '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct...">' +
+      '</div>' +
+      '<div class="grid-2" style="margin-top:.7rem">' +
+      '<div class="field"><label>申請内容</label>' +
+      '<input class="input" data-r-content="' + i + '" value="' + h(r.content || '') + '" placeholder="申請内容を入力">' +
+      '</div>' +
+      '<div class="field"><label>備考</label>' +
+      '<input class="input" data-r-notes="' + i + '" value="' + h(r.notes || '') + '" placeholder="備考を入力">' +
+      '</div>' +
       '</div>' +
       '<div class="help">1行ごとに「報告区分」と「元の起案番号」を入力すると、生成後の起案番号が自動計算されます。</div>' +
       '</div>';
@@ -2035,17 +2047,41 @@ function renderRequestRows(hostOverride) {
       renderAll();
     });
   });
+  primaryHost.querySelectorAll('[data-r-content]').forEach(function(el) {
+    el.addEventListener('input', function() {
+      var i = +el.dataset.rContent;
+      setRequestRow(i, 'content', el.value);
+      renderTemplate();
+    });
+    el.addEventListener('change', function() {
+      var i = +el.dataset.rContent;
+      setRequestRow(i, 'content', el.value);
+      renderAll();
+    });
+  });
+  primaryHost.querySelectorAll('[data-r-notes]').forEach(function(el) {
+    el.addEventListener('input', function() {
+      var i = +el.dataset.rNotes;
+      setRequestRow(i, 'notes', el.value);
+      renderTemplate();
+    });
+    el.addEventListener('change', function() {
+      var i = +el.dataset.rNotes;
+      setRequestRow(i, 'notes', el.value);
+      renderAll();
+    });
+  });
   primaryHost.querySelectorAll('.remove-request').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var i = +btn.dataset.remove;
       state.requestRows.splice(i, 1);
       if (!state.requestRows.length)
-        state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: ''}];
+        state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
       renderAll();
     });
   });
   primaryHost.querySelector('#addRequestBtn')?.addEventListener('click', function() {
-    state.requestRows.push({type: '変更', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: ''});
+    state.requestRows.push({type: '変更', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''});
     renderAll();
   });
 }
