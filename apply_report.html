@@ -328,7 +328,7 @@ ${requestRowsData().map((r,i)=>{
    const fs=folderSetFor(r);
    return `<div class="template-card" style="margin-top:.7rem">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.55rem">
-<strong style="font-size:.82rem">依頼 ${i+1}：${h(r.type)}</strong><span class="badge">${h(`${fs.no}_${outputCategory(r.type)}`)}</span></div>
+<strong style="font-size:.82rem">依頼 ${i+1}：${h(reportTypeLabel(r.type))}</strong><span class="badge">${h(`${fs.no}_${outputCategory(r.type)}`)}</span></div>
 <div class="grid-2">
 <div class="field"><label>申請フォルダ名</label><input class="input readonly" readonly value="${h(fs.apply)}"></div>
 <div class="field"><label>CSCC側申請フォルダ名</label><input class="input readonly" readonly value="${h(fs.cscc)}"></div>
@@ -384,7 +384,7 @@ ${requestRowsData().map((r,i)=>{
 </div>
 <div class="section-title">選択中の行に対応するCSCC側フォルダ</div>
 ${(state.selectedLedgerIndexes||[]).length
-  ? requestRowsData().map((r,i)=>{const fs=folderSetFor(r);return `<div class="file-row"><strong>依頼${i+1}：${h(r.type)}</strong><span>${h(fs.cscc)}</span></div>`;}).join('')
+  ? requestRowsData().map((r,i)=>{const fs=folderSetFor(r);return `<div class="file-row"><strong>依頼${i+1}：${h(reportTypeLabel(r.type))}</strong><span>${h(fs.cscc)}</span></div>`;}).join('')
   : '<div class="help">台帳行を選択すると、対象フォルダがここに表示されます。</div>'}`
     : stage.id==='path'
       ? `
@@ -624,7 +624,7 @@ jRCT番号：${h(getValue('jrctNo')||'')}
     <div class="card-bd template-block">
       ${rows.map((r,i)=>{
         const fs=folderSetFor(r);
-        return `<div class="template-card"><h4>依頼 ${i+1}：${h(r.type)}</h4><div class="mono">申請：${h(fs.apply)}
+        return `<div class="template-card"><h4>依頼 ${i+1}：${h(reportTypeLabel(r.type))}</h4><div class="mono">申請：${h(fs.apply)}
 CSCC側：${h(fs.cscc)}
 管理者側：${h(fs.manager)}</div></div>`;
       }).join('')}
@@ -648,7 +648,7 @@ CSCC側：${h(fs.cscc)}
 
       return `
         <div class="template-card">
-          <h4>依頼 ${i+1}：${h(no)} / ${h(r.type)}</h4>
+          <h4>依頼 ${i+1}：${h(no)} / ${h(reportTypeLabel(r.type))}</h4>
 
           <div class="section-title">命名規則</div>
           <div class="help">この依頼で想定するNAS格納ファイル名です。</div>
@@ -706,7 +706,7 @@ CSCC側：${h(fs.cscc)}
         <div class="template-card" style="background:var(--surface);padding:.8rem">
           <h4>依頼 ${i+1}</h4>
           <div class="mono">起案番号：${h(requestOutputNo(r))}
-報告区分：${h(r.type)}
+報告区分：${h(reportTypeLabel(r.type))}
 研究題名：${h(getValue('studyTitle')||'')}
 研究責任者：${h([getValue('managerAffil1'),getValue('managerDept1'),getValue('managerTitle1'),getValue('managerName1')].filter(Boolean).join(' '))}
 ${r.type==='定期報告'?'報告期間':'公表日'}：${h(formatDateToJapanese(r.date||''))}
@@ -823,7 +823,7 @@ jRCT URL：${h(r.url||'')}</div>
     <div class="card-hd"><h3>管理者側パス確定</h3><span class="badge">最終格納</span></div>
     <div class="card-bd template-block">
       ${rows.map((r,i)=>`<div class="template-card">
-        <h4>依頼 ${i+1}：${h(r.type)} / ${h(requestOutputNo(r))}</h4>
+        <h4>依頼 ${i+1}：${h(reportTypeLabel(r.type))} / ${h(requestOutputNo(r))}</h4>
         <div class="field"><label>管理者側フォルダパス</label>
         <input class="input mgr-path-input" data-path-idx="${i}" value="${h(paths[i]||'')}" placeholder="例：\\\\NAS\\\\管理者側\\\\特2025-17_2-2_申請"></div>
       </div>`).join('')}

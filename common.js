@@ -1887,6 +1887,15 @@ function renderFlowGuide() {
 }
 
 // 依頼行をレンダリング
+// applyページは報告区分を新規申請・変更申請・その他で表示する（内部値は従来のまま）
+function reportTypeLabel(t) {
+  if (pageMode !== 'apply') return t;
+  return {'初回公表':'新規申請','変更':'変更申請'}[t] || t;
+}
+function reportTypeFromLabel(label) {
+  if (pageMode !== 'apply') return label;
+  return {'新規申請':'初回公表','変更申請':'変更'}[label] || label;
+}
 function renderRequestRows(hostOverride) {
   var hosts = hostOverride
     ? [hostOverride]
@@ -1907,8 +1916,8 @@ function renderRequestRows(hostOverride) {
       '<div class="grid-2">' +
       '<div class="field"><label>報告区分</label>' +
       '<select class="select" data-r-type="' + i + '">' +
-      ['初回公表','変更','軽微変更','届出外','疾病等報告（医薬品）','疾病等報告（医療機器）','疾病等報告（再生医療等製品）','不適合報告','主要評価項目報告書等の通知','主要評価項目報告書又は総括報告書の概要の公表','審査意見の報告','定期報告','終了','その他'].map(function(opt) {
-        return '<option ' + (r.type === opt ? 'selected' : '') + '>' + opt + '</option>';
+      (pageMode === 'apply' ? ['新規申請','変更申請','その他'] : ['初回公表','変更','軽微変更','届出外','疾病等報告（医薬品）','疾病等報告（医療機器）','疾病等報告（再生医療等製品）','不適合報告','主要評価項目報告書等の通知','主要評価項目報告書又は総括報告書の概要の公表','審査意見の報告','定期報告','終了','その他']).map(function(opt) {
+        return '<option ' + (reportTypeLabel(r.type) === opt ? 'selected' : '') + '>' + opt + '</option>';
       }).join('') +
       '</select>' +
       (r.type && r.type.includes('疾病等') ? '<div style="margin-top:.5rem"><div class="help" style="margin-bottom:.3rem">自施設での発現か、他施設での発現かを選択してください。</div><div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap"><div class="mode-group" style="display:inline-flex"><button type="button" class="chip-btn ' + (r.facilityType === '自施設' ? 'active-mode' : '') + '" data-r-facility="' + i + '" data-facility-val="自施設">自施設</button><button type="button" class="chip-btn ' + (r.facilityType === '他施設' ? 'active-mode' : '') + '" data-r-facility="' + i + '" data-facility-val="他施設">他施設</button></div><div class="field" style="margin:0;flex:1;min-width:180px"><label>報告詳細</label><input class="input" data-r-facility-detail="' + i + '" value="' + h(r.facilityDetail || '') + '" placeholder="報告詳細を入力"></div></div></div>' : '') +
@@ -1939,7 +1948,7 @@ function renderRequestRows(hostOverride) {
   primaryHost.querySelectorAll('[data-r-type]').forEach(function(el) {
     el.addEventListener('change', function() {
       var i = +el.dataset.rType;
-      setRequestRow(i, 'type', el.value);
+      setRequestRow(i, 'type', reportTypeFromLabel(el.value));
       renderAll();
     });
   });
