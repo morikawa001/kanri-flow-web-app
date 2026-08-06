@@ -450,21 +450,23 @@ function docxStudyCategoryLabel() {
   return '';
 }
 
-// 申請内容から■（チェック）の項目だけを抽出して箇条書き（・で連結、項目間はスペース）で返す
+// 申請内容から■（チェック）のすぐ右隣の一つながりの文字列だけを抽出して箇条書き（・で連結、項目間はスペース）で返す
 function extractCheckedItems(text) {
   if (!text) return '';
   return text.split('\n').map(function(line) {
-    return line.replace(/^[\s\u3000]+/, '');
-  }).filter(function(line) {
-    return line.indexOf('■') !== -1;
-  }).map(function(line) {
-    var cleaned = line.replace(/\s*□[^□\n]*/g, '').replace(/■/g, '').replace(/^[\s\u3000：:]+/, '').trim();
+    line = line.replace(/[☐]/g, '□').replace(/[☑☒✓✔●]/g, '■');
+    if (line.indexOf('■') === -1) return '';
+    var parts = line.split(/(?=[■□])/);
+    var out = '';
+    parts.forEach(function(p) {
+      if (p.charAt(0) === '■') out += p.substring(1).replace(/^[\s\u3000]+/, '');
+    });
+    var cleaned = out.replace(/^[\s\u3000：:]+/, '').trim();
     var open = (cleaned.match(/[（(]/g) || []).length;
     var close = (cleaned.match(/[）)]/g) || []).length;
-    var diff = open - close;
-    if (diff > 0) cleaned += new Array(diff + 1).join('）');
+    if (open > close) cleaned += new Array(open - close + 1).join('）');
     return '・' + cleaned;
-  }).join(' ');
+  }).filter(Boolean).join(' ');
 }
 
 // ============================================================
@@ -1972,13 +1974,11 @@ function renderRequestRows(hostOverride) {
       '<div class="field" style="margin-top:.7rem"><label>jRCT URL</label>' +
       '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct...">' +
       '</div>' +
-      '<div class="grid-2" style="margin-top:.7rem">' +
-      '<div class="field"><label>申請内容</label>' +
+      '<div class="field" style="margin-top:.7rem"><label>申請内容</label>' +
       '<input class="input" data-r-content="' + i + '" value="' + h(r.content || '') + '" placeholder="申請内容を入力">' +
       '</div>' +
-      '<div class="field"><label>備考</label>' +
+      '<div class="field" style="margin-top:.7rem"><label>備考</label>' +
       '<input class="input" data-r-notes="' + i + '" value="' + h(r.notes || '') + '" placeholder="備考を入力">' +
-      '</div>' +
       '</div>' +
       '<div class="help">1行ごとに「報告区分」と「元の起案番号」を入力すると、生成後の起案番号が自動計算されます。</div>' +
       '</div>';
