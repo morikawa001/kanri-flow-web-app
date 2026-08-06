@@ -69,16 +69,21 @@ gh run list --repo morikawa001/kanri_flow --limit 1
 ## 運用メモ（2026-08-06 時点・再開用）
 
 ### 現在の状態
-- `master` / `kanri_flow/main` は **`2c4a23c`**（GitHub Actions方式へ切り替え済みの安定版）
+- `master` / `kanri_flow/main` は **`eaaa6b7`**
 - Pagesの`build_type`を `legacy` → `workflow` に切り替え、`.github/workflows/pages.yml` + `.nojekyll` を追加
-- 旧安定版 `c5dedff`（申請・公表分離前）からは、巻き戻した18コミット分
-  （apply_report改善・docx差し込みタグ・JRCT自動入力・publish復元・.nojekyll）は
-  **`backup/20260806-apply-improvements`**（= `5da734d`）に保存し、originへpush済み
+- **`apply_report.html` は改善版（`backup/20260806-apply-improvements` の `b028b91` 相当）を復元済み**
+  （申請内容・備考欄、docx差し込みタグ、JRCT自動入力、報告区分表示切替。依存の `common.js` / `identifiers.js` も同時復元）
+- 復元対象外: `publish_report.html` をはじめ他ページは巻き戻し後の状態（c5dedff系）のまま
+- バックアップブランチ **`backup/20260806-apply-improvements`**（= `5da734d`）は保存・origin push済み
 - `kanri_flow` の不要な `master` ブランチは削除済み（`main` のみ）
 
 ### 注意点
-- `apply_report.html` は c5dedff時点＝**改善前**に戻っている。apply側の改善を復元する場合は
-  バックアップブランチから該当ファイル（`apply_report.html` / `common.js` / `identifiers.js` 等）を抽出する
+- **apply側のファイルとその他のページで状態が異なる混在状態**になっている
+  - `apply_report.html` / `common.js` / `identifiers.js` = 改善版（b028b91相当）
+  - `publish_report.html` ほか他ページ = 巻き戻し後（c5dedff相当）
+- `common.js` はapplyとpublishで共有。apply用の改善（`reportTypeLabel`・`extractCheckedItems`等）は
+  `pageMode === 'apply'` 分岐で他のページに影響しない設計になっている
+- 今後publish側も改善版に戻す場合は、バックアップブランチから `publish_report.html` を抽出する
 - legacyビルドは不安定だった（2026-08-06に`errored`/長時間`building`が多発）。現在はActions方式のため影響なし
 
 ## 主な機能
