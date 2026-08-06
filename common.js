@@ -202,10 +202,11 @@ function outputCategory(type) {
 
 // 台帳行から依頼行オブジェクトを生成
 function rowFromLedger(r) {
-  return {
+return {
     type: r['報告区分'] || '初回公表',
     base: r['元の起案番号'] || r['起案番号'] || '特2025-17_2-1',
     date: r['公表日'] || r['報告期間'] || '',
+    approval: r['承認日'] || '',
     url: r['jRCT URL'] || '',
     facilityType: r['自施設他施設'] || '',
     facilityDetail: r['報告詳細'] || ''
@@ -589,7 +590,9 @@ function csvEscape(v) {
 // CSVを生成（依頼行から）
 function csvFromRequests() {
   var rows = requestRowsData();
+  var isApply = pageMode === 'apply';
   var header = ['起案日','元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)'];
+  if (isApply) header.splice(header.indexOf('公表日') + 1, 0, '承認日');
   var drafter = getValue('drafterName') || '';
   var studyTitle = getValue('studyTitle') || '';
   var managerName = buildManagerDisplay() || '';
@@ -610,17 +613,20 @@ function csvFromRequests() {
   var paths = state.managerPaths || [];
   var draftDate = state.draftDate || todayFormatted();
   var body = rows.map(function(r, idx) {
-    return [
+    var rowArr = [
       draftDate, r.base || '', requestOutputNo(r), r.type, drafter, getValue('drafterDept') || '', status,
-      r.type === '定期報告' ? '' : r.date || '', r.type === '定期報告' ? r.date || '' : '', r.url || '',
-      getValue('jrctNo') || '', studyTitle, managerName,
+      r.type === '定期報告' ? '' : r.date || ''
+    ];
+    if (pageMode === 'apply') rowArr.push(r.approval || '');
+    rowArr.push(r.type === '定期報告' ? r.date || '' : '', r.url || '');
+    rowArr.push(getValue('jrctNo') || '', studyTitle, managerName,
       studyCategory, subCategory, mailSubject,
       getValue('managerAffil1') || '', getValue('managerDept1') || '', getValue('managerTitle1') || '', getValue('managerName1') || '',
       getValue('managerName2') || '', getValue('managerAffil2') || '', getValue('managerDept2') || '', getValue('managerTitle2') || '',
       state.sendDate || '', paths[idx] || '', r.facilityType || '', r.facilityDetail || '',
       state.stepDurations['intake'] || 0, state.stepDurations['folders'] || 0, state.stepDurations['drafts'] || 0,
-      state.stepDurations['files'] || 0, state.stepDurations['work'] || 0, state.stepDurations['path'] || 0, state.stepDurations['send'] || 0
-    ].map(csvEscape).join(',');
+      state.stepDurations['files'] || 0, state.stepDurations['work'] || 0, state.stepDurations['path'] || 0, state.stepDurations['send'] || 0);
+    return rowArr.map(csvEscape).join(',');
   }).join('\n');
   return header.map(csvEscape).join(',') + '\n' + body;
 }
@@ -671,6 +677,7 @@ function handleCsvLoadFromFile(ev) {
           type: r['報告区分'] || '初回公表',
           base: r['元の起案番号'] || r['起案番号'] || '特2025-17_2-1',
           date: r['公表日'] || r['報告期間'] || '',
+          approval: r['承認日'] || '',
           url: r['jRCT URL'] || '',
           facilityType: r['自施設他施設'] || '',
           facilityDetail: r['報告詳細'] || ''
@@ -796,6 +803,7 @@ function ledgerCsvForDownload() {
   if (!headers.includes('jRCT番号')) headers.push('jRCT番号');
   if (!headers.includes('所属・部門名')) headers.push('所属・部門名');
   if (!headers.includes('公表日')) headers.push('公表日');
+  if (pageMode === 'apply' && !headers.includes('承認日')) headers.splice(headers.indexOf('公表日') + 1, 0, '承認日');
   if (!headers.includes('報告期間')) headers.push('報告期間');
   if (!headers.includes('自施設他施設')) headers.push('自施設他施設');
   if (!headers.includes('報告詳細')) headers.push('報告詳細');
@@ -836,6 +844,7 @@ function ledgerCsvForDownload() {
           '起案番号': requestOutputNo(r),
           '報告区分': r.type,
           '公表日': r.type === '定期報告' ? '' : r.date || '',
+          '承認日': r.approval || '',
           '報告期間': r.type === '定期報告' ? r.date || '' : '',
           'jRCT URL': r.url || '',
           '元の起案番号': r.base || '',
@@ -1943,8 +1952,22 @@ function renderRequestRows(hostOverride) {
     state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
   var requestHtml = requestRowsData().map(function(r, i) {
     var isPeriodic = r.type === '定期報告';
+    var isApply = pageMode === 'apply';
     var dateLabel = isPeriodic ? '報告期間' : '公表日';
     var datePlaceholder = isPeriodic ? '例：2026/4/5～2026/9/30' : '例：2026/07/05';
+    var dateField = isApply
+      ? '<div class="field"><label>承認日</label>' +
+        '<input class="input" data-r-approval="' + i + '" value="' + h(r.approval || '') + '" placeholder="例：2026/07/05">' +
+        '</div>'
+      : '<div class="field"><label>' + dateLabel + '</label>' +
+        '<input class="input" data-r-date="' + i + '" value="' + h(r.date || '') + '" placeholder="' + datePlaceholder + '"' + (isPeriodic ? ' pattern="\\d{4}/\\d{1,2}/\\d{1,2}～\\d{4}/\\d{1,2}/\\d{1,2}" title="形式：yyyy/m/d～yyyy/m/d"' : '') + '>' +
+        (isPeriodic ? '<div class="help" style="color:var(--primary)">形式：yyyy/m/d～yyyy/m/d（最初の日付入力後に「～」が自動挿入されます）</div>' : '') +
+        '</div>';
+    var urlField = isApply
+      ? ''
+      : '<div class="field" style="margin-top:.7rem"><label>jRCT URL</label>' +
+        '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct...">' +
+        '</div>';
     return '<div class="template-card request-row" style="padding:.8rem;margin-top:.55rem">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.55rem">' +
       '<strong style="font-size:.82rem">依頼 ' + (i + 1) + '</strong>' +
@@ -1967,14 +1990,9 @@ function renderRequestRows(hostOverride) {
       '<div class="field"><label>生成後の起案番号</label>' +
       '<input class="input readonly" readonly data-generated-no value="' + h(requestOutputNo(r)) + '">' +
       '</div>' +
-      '<div class="field"><label>' + dateLabel + '</label>' +
-      '<input class="input" data-r-date="' + i + '" value="' + h(r.date || '') + '" placeholder="' + datePlaceholder + '"' + (isPeriodic ? ' pattern="\\d{4}/\\d{1,2}/\\d{1,2}～\\d{4}/\\d{1,2}/\\d{1,2}" title="形式：yyyy/m/d～yyyy/m/d"' : '') + '>' +
-      (isPeriodic ? '<div class="help" style="color:var(--primary)">形式：yyyy/m/d～yyyy/m/d（最初の日付入力後に「～」が自動挿入されます）</div>' : '') +
+      dateField +
       '</div>' +
-      '</div>' +
-      '<div class="field" style="margin-top:.7rem"><label>jRCT URL</label>' +
-      '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct...">' +
-      '</div>' +
+      urlField +
       (pageMode === 'apply' ? '<div class="field" style="margin-top:.7rem"><label>申請内容</label>' +
       '<input class="input" data-r-content="' + i + '" value="' + h(r.content || '') + '" placeholder="申請内容を入力">' +
       '</div>' +
@@ -2066,6 +2084,18 @@ function renderRequestRows(hostOverride) {
     el.addEventListener('change', function() {
       var i = +el.dataset.rUrl;
       setRequestRow(i, 'url', el.value);
+      renderAll();
+    });
+  });
+  primaryHost.querySelectorAll('[data-r-approval]').forEach(function(el) {
+    el.addEventListener('input', function() {
+      var i = +el.dataset.rApproval;
+      setRequestRow(i, 'approval', el.value);
+      renderTemplate();
+    });
+    el.addEventListener('change', function() {
+      var i = +el.dataset.rApproval;
+      setRequestRow(i, 'approval', el.value);
       renderAll();
     });
   });
