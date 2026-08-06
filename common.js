@@ -450,6 +450,23 @@ function docxStudyCategoryLabel() {
   return '';
 }
 
+// 申請内容から■（チェック）の項目だけを抽出して箇条書き（・で連結、項目間はスペース）で返す
+function extractCheckedItems(text) {
+  if (!text) return '';
+  return text.split('\n').map(function(line) {
+    return line.replace(/^[\s\u3000]+/, '');
+  }).filter(function(line) {
+    return line.indexOf('■') !== -1;
+  }).map(function(line) {
+    var cleaned = line.replace(/\s*□[^□\n]*/g, '').replace(/■/g, '').replace(/^[\s\u3000：:]+/, '').trim();
+    var open = (cleaned.match(/[（(]/g) || []).length;
+    var close = (cleaned.match(/[）)]/g) || []).length;
+    var diff = open - close;
+    if (diff > 0) cleaned += new Array(diff + 1).join('）');
+    return '・' + cleaned;
+  }).join(' ');
+}
+
 // ============================================================
 // メール関連
 // ============================================================
@@ -971,7 +988,7 @@ function reportDocxDataForRow(r) {
     '研究区分': safeDocxText(docxStudyCategoryLabel()),
     'jRCT番号': safeDocxText(getValue('jrctNo') || ''),
     '元の起案番号': safeDocxText(relatedRows.map(function(x) { return x?.base || ''; }).filter(Boolean).join('\n')),
-    '申請内容': safeDocxText(relatedRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n')),
+    '申請内容': safeDocxText(extractCheckedItems(relatedRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n'))),
     '備考': safeDocxText(relatedRows.map(function(x) { return x?.notes || ''; }).filter(Boolean).join('\n')),
     '作成年': safeDocxText(today.year),
     '作成月': safeDocxText(today.month),
@@ -1317,7 +1334,7 @@ function docxDataForRow(r) {
     '研究区分': safeDocxText(docxStudyCategoryLabel()),
     'jRCT番号': safeDocxText(getValue('jrctNo') || ''),
     '元の起案番号': safeDocxText(targetRows.map(function(x) { return x?.base || ''; }).filter(Boolean).join('\n')),
-    '申請内容': safeDocxText(targetRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n')),
+    '申請内容': safeDocxText(extractCheckedItems(targetRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n'))),
     '備考': safeDocxText(targetRows.map(function(x) { return x?.notes || ''; }).filter(Boolean).join('\n')),
 
     '報告区分': joinDocxLines(targetRows.map(function(x) { return x?.type || ''; })),
