@@ -142,9 +142,10 @@ function setRequestRow(idx, key, val) {
   state.requestRows[idx][key] = val;
 }
 
-// 依頼行の出力番号を計算（生成後の起案番号は元の起案番号と同じ）
+// 依頼行の出力番号を計算（applyは生成後の起案番号を元の起案番号と同じにする）
 function requestOutputNo(r) {
-  return r.base || '特2025-17_2-1';
+  if (pageMode === 'apply') return r.base || '特2025-17_2-1';
+  return incrementLastBranch(r.base || '特2025-17_2-1', r.type === '軽微変更') || (r.base || '特2025-17_2-1');
 }
 
 // 複数依頼行の共通プレフィックスを生成
@@ -1012,11 +1013,11 @@ function reportDocxDataForRow(r) {
     '公表区分_新規': mark(!!initialRow),
     '新規公表日': formatDateToJapanese(initialRow?.date || ''),
     '新規URL': safeDocxText(initialRow?.url || ''),
-    '公表区分_上位変更': (changeRow || minorRow) ? '■' : '□',
+    '公表区分_上位変更': (pageMode === 'apply') ? ((changeRow || minorRow) ? '■' : '□') : (changeRow ? '■' : '□'),
     '公表区分_下位変更': changeRow ? '■' : '□',
     '変更公表日': formatDateToJapanese(changeRow?.date || ''),
     '変更URL': safeDocxText(changeRow?.url || ''),
-    '公表区分_軽微': minorRow ? '■' : '□',
+    '公表区分_軽微': (pageMode === 'apply') ? (minorRow ? '■' : '□') : mark(!!minorRow),
     '軽微公表日': formatDateToJapanese(minorRow?.date || ''),
     '軽微URL': safeDocxText(minorRow?.url || ''),
     '公表区分_届出外': mark(isTodokedeGai),
@@ -1974,12 +1975,12 @@ function renderRequestRows(hostOverride) {
       '<div class="field" style="margin-top:.7rem"><label>jRCT URL</label>' +
       '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct...">' +
       '</div>' +
-      '<div class="field" style="margin-top:.7rem"><label>申請内容</label>' +
+      (pageMode === 'apply' ? '<div class="field" style="margin-top:.7rem"><label>申請内容</label>' +
       '<input class="input" data-r-content="' + i + '" value="' + h(r.content || '') + '" placeholder="申請内容を入力">' +
       '</div>' +
       '<div class="field" style="margin-top:.7rem"><label>備考</label>' +
       '<input class="input" data-r-notes="' + i + '" value="' + h(r.notes || '') + '" placeholder="備考を入力">' +
-      '</div>' +
+      '</div>' : '') +
       '<div class="help">1行ごとに「報告区分」と「元の起案番号」を入力すると、生成後の起案番号が自動計算されます。</div>' +
       '</div>';
   }).join('')
