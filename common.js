@@ -969,6 +969,7 @@ function reportDocxDataForRow(r) {
     '氏名': safeDocxText(getValue('managerName1') || ''),
     '研究題名': safeDocxText(getValue('studyTitle') || ''),
     '研究区分': safeDocxText(docxStudyCategoryLabel()),
+    '元の起案番号': safeDocxText(relatedRows.map(function(x) { return x?.base || ''; }).filter(Boolean).join('\n')),
     '申請内容': safeDocxText(relatedRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n')),
     '備考': safeDocxText(relatedRows.map(function(x) { return x?.notes || ''; }).filter(Boolean).join('\n')),
     '作成年': safeDocxText(today.year),
@@ -1313,6 +1314,7 @@ function docxDataForRow(r) {
     '氏名': safeDocxText(getValue('managerName1') || ''),
     '研究題名': safeDocxText(getValue('studyTitle') || ''),
     '研究区分': safeDocxText(docxStudyCategoryLabel()),
+    '元の起案番号': safeDocxText(targetRows.map(function(x) { return x?.base || ''; }).filter(Boolean).join('\n')),
     '申請内容': safeDocxText(targetRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n')),
     '備考': safeDocxText(targetRows.map(function(x) { return x?.notes || ''; }).filter(Boolean).join('\n')),
 
