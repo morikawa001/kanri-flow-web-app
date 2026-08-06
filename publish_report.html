@@ -19,13 +19,16 @@
 .assist-highlight{border-color:var(--error)!important;box-shadow:0 0 0 3px rgba(181,52,130,.15)!important;animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(181,52,130,.15)}50%{box-shadow:0 0 0 5px rgba(181,52,130,.25)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+html[data-theme="light"] body.page-publish{--primary:#2f9e6e;--primary-2:#277a56;--primary-light:#e6f5ee;--primary-glow:rgba(47,158,110,.15)}
+html[data-theme="dark"] body.page-publish{--primary:#48bb78;--primary-2:#7ed9a7;--primary-light:#143b2b;--primary-glow:rgba(72,187,120,.2)}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
 <script src="https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js"></script>
 </head>
-<body>
+<body class="page-publish">
 <div class="app">
 <header class="topbar">
 <div class="brand">
@@ -55,7 +58,7 @@
 </div>
 </header>
 <section class="headline">
-<h2 id="headlineTitle">起案フロー：入口入力からフォルダZIP・台帳CSV作成まで</h2>
+<h2 id="headlineTitle">公表管理者報告起案：入口入力から台帳CSV・フォルダZIP作成まで</h2>
 <p id="headlineText">研究課題名・研究責任者などの共通情報を最初に入力し、複数依頼は1件ずつ管理します。台帳CSVを読み込むと途中から再開できます。</p>
 </section>
 <section class="flow-guide" id="flowGuide"></section>
