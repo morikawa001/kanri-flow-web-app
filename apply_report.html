@@ -1077,13 +1077,32 @@ function parseJRCTHtml(input){
     const cText=contentBlock.join('\n');
     const newChecked=checkedItem(cText,'新規提出');
     const chgChecked=checkedItem(cText,'変更提出');
-    if(newChecked===true){
-      data.content='新規提出';
-    }else if(chgChecked===true){
-      data.content=contentBlock.filter((l)=>!l.includes('変更提出')&&!l.includes('新規提出')).join('\n').replace(/^[\s\u3000：:]+/,'').trim();
-    }else{
-      data.content=cText;
+    const srcLines=contentBlock.filter((l)=>!l.includes('変更提出')&&!l.includes('新規提出'));
+    let contentBody=extractCheckedText(srcLines.length?srcLines:contentBlock);
+    if(!contentBody){
+      contentBody=srcLines.join('\n').replace(/^[\s\u3000]*/,'').trim();
     }
+    if(newChecked===true){
+      data.content=contentBody||'新規提出';
+    }else if(chgChecked===true){
+      data.content=contentBody;
+    }else{
+      data.content=contentBody||cText;
+    }
+  }
+  function extractCheckedText(lines){
+    const out=[];
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i];
+      if(line.indexOf('■')===-1) continue;
+      let acc='';
+      line.split(/(?=[■□])/).forEach(function(p){
+        if(p.charAt(0)==='■') acc+=p.substring(1);
+      });
+      acc=acc.replace(/^[\s\u3000：:]+/,'').replace(/[\s\u3000：:、]+$/,'').trim();
+      if(acc) out.push(acc);
+    }
+    return out.join('\n');
   }
   const resultLine=findVal('審査結果');
   if(resultLine){
