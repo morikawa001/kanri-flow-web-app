@@ -69,7 +69,7 @@ html[data-theme="dark"] body.page-apply{--primary:#4fa3e8;--primary-2:#79b9f0;--
 </main>
 </div>
 <script>var pageMode = 'apply';</script>
-<script src="common.js?v=c1dbe1e-apply-docx"></script>
+<script src="common.js?v=c1dbe1e-apply-content"></script>
 <script src="state.js?v=4b1851b"></script>
 <script src="utils.js?v=4b1851b"></script>
 <script src="dates.js?v=4b1851b"></script>
@@ -1073,7 +1073,18 @@ function parseJRCTHtml(input){
     if(fd!==undefined) data.isFunding=fd;
   }
   const contentBlock=findBlock('申請内容',['審査結果','備考']);
-  if(contentBlock.length) data.content=contentBlock.join('\n');
+  if(contentBlock.length){
+    const cText=contentBlock.join('\n');
+    const newChecked=checkedItem(cText,'新規提出');
+    const chgChecked=checkedItem(cText,'変更提出');
+    if(newChecked===true){
+      data.content='新規提出';
+    }else if(chgChecked===true){
+      data.content=contentBlock.filter((l)=>!l.includes('変更提出')&&!l.includes('新規提出')).join('\n').replace(/^[\s\u3000：:]+/,'').trim();
+    }else{
+      data.content=cText;
+    }
+  }
   const resultLine=findVal('審査結果');
   if(resultLine){
     const m=resultLine.match(/CRB4180010-\s*([^\s（）]+)/);

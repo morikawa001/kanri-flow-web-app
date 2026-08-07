@@ -471,6 +471,18 @@ function extractCheckedItems(text) {
   }).filter(Boolean).join(' ');
 }
 
+// docx用申請内容を出力（applyは入力欄の内容をそのまま反映し、publishはチェック項目のみ抽出）
+function docxContentForPrint(rows) {
+  var text = rows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n');
+  if (pageMode === 'apply') {
+    return text.split('\n').map(function(l) {
+      l = l.replace(/^[\s\u3000・□■：:]+/, '').trim();
+      return l;
+    }).filter(Boolean).join('\n');
+  }
+  return extractCheckedItems(text);
+}
+
 // ============================================================
 // メール関連
 // ============================================================
@@ -1000,7 +1012,7 @@ function reportDocxDataForRow(r) {
     '研究区分': safeDocxText(docxStudyCategoryLabel()),
     'jRCT番号': safeDocxText(getValue('jrctNo') || ''),
     '元の起案番号': safeDocxText(relatedRows.map(function(x) { return x?.base || ''; }).filter(Boolean).join('\n')),
-    '申請内容': safeDocxText(extractCheckedItems(relatedRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n'))),
+    '申請内容': safeDocxText(docxContentForPrint(relatedRows)),
     '備考': safeDocxText(relatedRows.map(function(x) { return x?.notes || ''; }).filter(Boolean).join('\n')),
     '作成年': safeDocxText(today.year),
     '作成月': safeDocxText(today.month),
@@ -1348,7 +1360,7 @@ function docxDataForRow(r) {
     '研究区分': safeDocxText(docxStudyCategoryLabel()),
     'jRCT番号': safeDocxText(getValue('jrctNo') || ''),
     '元の起案番号': safeDocxText(targetRows.map(function(x) { return x?.base || ''; }).filter(Boolean).join('\n')),
-    '申請内容': safeDocxText(extractCheckedItems(targetRows.map(function(x) { return x?.content || ''; }).filter(Boolean).join('\n'))),
+    '申請内容': safeDocxText(docxContentForPrint(targetRows)),
     '備考': safeDocxText(targetRows.map(function(x) { return x?.notes || ''; }).filter(Boolean).join('\n')),
 
     '報告区分': joinDocxLines(targetRows.map(function(x) { return x?.type || ''; })),
