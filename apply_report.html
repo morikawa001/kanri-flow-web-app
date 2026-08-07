@@ -1191,6 +1191,28 @@ function applyJRCTData(data){
   }
   renderAll();
 }
+// 申請内容欄の表示用マスク（自動入力時にtype目印「新規提出」「変更提出」や括弧付き変更日を
+// 入力欄から見せない。内部のデータ（state.requestRows[i].content）はそのまま保持する）
+function contentDisplayMask(v){
+  if(v==null) return '';
+  var s=String(v);
+  s=s.replace(/新規提出|変更提出|新規提案|変更提案/g,'');
+  // （変更（2026年7月5日）等の種別＋括弧日付を除去
+  s=s.replace(/[（(]\s*(変更|新規)\s*[（(]\s*\d{4}\s*[年\/]\s*\d{1,2}\s*[月\/]\s*\d{1,2}\s*日?\s*[）)\]]/g,'');
+  // 未対応の括弧だけ残った場合の掃除
+  s=s.replace(/[（(]\s*(変更|新規)\s*[（(][^）)*]*[）)\]]/g,'');
+  return s.replace(/^[\s\u3000]+|[\s\u3000]+$/g,'');
+}
+// 依頼行の申請内容入力欄へマスク表示を適用（内部データは変えない）
+function applyContentMask(){
+  if(pageMode!=='apply') return;
+  document.querySelectorAll('[data-r-content]').forEach(function(inp){
+    var i=+inp.dataset.rContent;
+    var raw=(state.requestRows&&state.requestRows[i])?state.requestRows[i].content:'';
+    var masked=contentDisplayMask(raw);
+    if(inp.value!==masked) inp.value=masked;
+  });
+}
 const ASSIST_DATA = {
   intake:{
     title:'こんにちは！入力をサポートします',
@@ -1333,6 +1355,7 @@ function toggleNav(){
 function renderAll(){
   initMailEdits();
   renderMain();
+  applyContentMask();
   renderTemplate();
   updateModeUI();
   updateNavBtn();
