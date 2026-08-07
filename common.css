@@ -126,6 +126,11 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .template-card h4{font-size:.82rem;margin-bottom:.35rem;font-weight:600}
 .mono{font-family:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;font-size:.74rem;white-space:pre-wrap;word-break:break-word;line-height:1.5;color:var(--muted)}
 
+/* CSV・Excelドロップゾーン */
+.csv-dropzone{border:2px dashed var(--border);border-radius:var(--r-lg);padding:.6rem .7rem;background:var(--surface);transition:all .2s ease}
+.csv-dropzone:hover{border-color:var(--primary)}
+.csv-dropzone.drop-active{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 3px var(--primary-glow)}
+
 /* KPI */
 .kpi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.45rem}
 .kpi{padding:.6rem .65rem;background:var(--surface-2);border-radius:var(--r-md);border:1px solid var(--border);transition:all .2s ease;text-align:center}

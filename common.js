@@ -667,23 +667,86 @@ function downloadCsvFromRequests() {
   renderTemplate();
 }
 
-// CSVファイルから読み込み
+// 台帳ファイル（CSV／Excel）を一行データへ変換
+function readLedgerFile(file, cb) {
+  var name = (file && file.name || '').toLowerCase();
+  var isExcel = /\.(xlsx|xls)$/.test(name) || (file && /spreadsheet/i.test(file.type));
+  var reader = new FileReader();
+  reader.onerror = function() { cb(null, new Error('ファイルを読み込めませんでした。')); };
+  reader.onload = function(e) {
+    try {
+      var parsed;
+      if (isExcel && typeof XLSX !== 'undefined') {
+        var wb = XLSX.read(e.target.result, { type: 'array' });
+        var sheet = wb.Sheets[wb.SheetNames[0]];
+        parsed = parseCsvRobust(XLSX.utils.sheet_to_csv(sheet));
+      } else {
+        parsed = parseCsvRobust(String(e.target.result || ''));
+      }
+      cb(parsed);
+    } catch (err) {
+      cb(null, err);
+    }
+  };
+  if (isExcel) reader.readAsArrayBuffer(file);
+  else reader.readAsText(file);
+}
+
+function fileFromEvent(ev) {
+  if (ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]) return ev.dataTransfer.files[0];
+  return ev.target && ev.target.files && ev.target.files[0];
+}
+
+// ドロップゾーンとして機能させる。ドロップされたファイルを input の change イベント経由で処理する
+function setupDropZone(dropZoneId, inputId) {
+  var zone = document.getElementById(dropZoneId);
+  var input = document.getElementById(inputId);
+  if (!zone || !input) return;
+  var activeCls = 'drop-active';
+  zone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    zone.classList.add(activeCls);
+  });
+  zone.addEventListener('dragenter', function(e) {
+    e.preventDefault();
+    zone.classList.add(activeCls);
+  });
+  zone.addEventListener('dragleave', function(e) {
+    zone.classList.remove(activeCls);
+  });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    zone.classList.remove(activeCls);
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    var dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
+// CSV／Excelファイルから読み込み（ステップ1 復元用）
 function handleCsvLoadFromFile(ev) {
-  var file = ev.target.files && ev.target.files[0];
+  var file = fileFromEvent(ev);
   if (!file) {
     fileStatuses.csv = 'ファイルが選択されていません。';
     renderTemplate();
     return;
   }
-  var reader = new FileReader();
-  reader.onload = function(e) {
+  fileStatuses.csv = '';
+  readLedgerFile(file, function(parsed, err) {
+    if (err) {
+      fileStatuses.csv = 'ファイル読み込みに失敗しました：' + err.message;
+      renderTemplate();
+      return;
+    }
+    if (!parsed || !parsed.rows.length) {
+      fileStatuses.csv = 'CSV／Excelに有効な行がありません。';
+      renderTemplate();
+      return;
+    }
     try {
-      var parsed = parseCsvRobust(String(e.target.result || ''));
-      if (!parsed.rows.length) {
-        fileStatuses.csv = 'CSVに有効な行がありません。';
-        renderTemplate();
-        return;
-      }
       state.requestRows = parsed.rows.map(function(r) {
         return {
           type: r['報告区分'] || '初回公表',
@@ -729,40 +792,42 @@ function handleCsvLoadFromFile(ev) {
       fileStatuses.csv = 'CSV読み込みに失敗しました：' + err.message;
       renderTemplate();
     }
-  };
-  reader.readAsText(file);
+  });
 }
 
-// 台帳CSVを読み込み（後方処理用）
+// 台帳CSV／Excelを読み込み（後方処理用）
 function handleLedgerLoadForBack(ev) {
-  var file = ev.target.files && ev.target.files[0];
+  var file = fileFromEvent(ev);
   if (!file) {
     fileStatuses.csvStep5 = 'ファイルが選択されていません。';
     renderTemplate();
     return;
   }
-  var reader = new FileReader();
-  reader.onload = function(e) {
+  fileStatuses.csvStep5 = '';
+  readLedgerFile(file, function(parsed, err) {
+    if (err) {
+      fileStatuses.csvStep5 = 'ファイル読み込みに失敗しました：' + err.message;
+      renderTemplate();
+      return;
+    }
+    if (!parsed || !parsed.rows.length) {
+      fileStatuses.csvStep5 = 'CSV／Excelに有効な行がありません。';
+      renderTemplate();
+      return;
+    }
     try {
-      var parsed = parseCsvRobust(String(e.target.result || ''));
-      if (!parsed.rows.length) {
-        fileStatuses.csvStep5 = 'CSVに有効な行がありません。';
-        renderTemplate();
-        return;
-      }
       state.loadedLedgerHeaders = parsed.headers;
       state.loadedLedgerRows = parsed.rows;
       state.selectedLedgerIndexes = parsed.rows.map(function(_, i) { return i; });
       state.managerPaths = parsed.rows.map(function(r) { return r['管理者側フォルダパス'] || ''; });
       syncRequestRowsFromSelectedLedger();
-      fileStatuses.csvStep5 = '✅ 台帳CSVを読み込みました。対象行を選択してください。';
+      fileStatuses.csvStep5 = '✅ 台帳CSV／Excelを読み込みました。対象行を選択してください。';
       renderAll();
     } catch(err) {
       fileStatuses.csvStep5 = 'CSV読み込みに失敗しました：' + err.message;
       renderTemplate();
     }
-  };
-  reader.readAsText(file);
+  });
 }
 
 // 台帳行選択をトグル

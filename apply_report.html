@@ -69,7 +69,7 @@ html[data-theme="dark"] body.page-apply{--primary:#4fa3e8;--primary-2:#79b9f0;--
 </main>
 </div>
 <script>var pageMode = 'apply';</script>
-<script src="common.js?v=c1dbe1e-apply-content"></script>
+<script src="common.js?v=4a1931f-apply-content"></script>
 <script src="state.js?v=4b1851b"></script>
 <script src="utils.js?v=4b1851b"></script>
 <script src="dates.js?v=4b1851b"></script>
@@ -348,8 +348,11 @@ ${requestRowsData().map((r,i)=>{
       ? `
 <div class="section-title">申請管理者報告台帳CSVを読み込んでステップ5から再開</div>
 <div class="template-card" style="margin-top:.7rem">
-<div class="field"><label>申請管理者報告台帳CSVを読み込み</label>
-<input type="file" id="csvInputStep5" accept=".csv" class="input" style="padding:.4rem .6rem;height:auto"></div>
+<div class="field"><label>申請管理者報告台帳CSV・Excelを読み込み</label>
+<div id="csvDropZoneStep5" class="csv-dropzone">
+<input type="file" id="csvInputStep5" accept=".csv,.xlsx,.xls" class="input" style="padding:.4rem .6rem;height:auto">
+</div>
+<div class="help" style="margin-top:.4rem">または、台帳CSV・Excelファイルをこの枠内へドラッグ＆ドロップでも読み込めます。</div></div>
 <div class="help" id="csvStatusStep5" style="margin-top:.4rem">${fileStatuses.csvStep5 || '決裁完了後の案件を台帳から読み込み、対象行を選択してCSCC側フォルダ作業をここから再開できます。研究課題名・研究責任者もCSVから自動で復元されます。'}</div>
 </div>
 <div class="template-card" style="margin-top:.7rem">
@@ -457,11 +460,12 @@ ${stage.id==='intake'
 </div>
 </div>
 <div class="template-card" style="margin-bottom:.75rem">
-<div class="help" style="margin-bottom:.6rem">以前保存した台帳CSVを読み込むと、研究課題名・研究責任者・研究区分・研究略称・依頼行などを自動復元し、続きから再開できます。</div>
-<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-<label class="ghost-btn" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">台帳CSVを読み込む<input type="file" id="csvInputStep1" accept=".csv" style="display:none"></label>
+<div class="help" style="margin-bottom:.6rem">以前保存した台帳CSV・Excelを読み込むと、研究課題名・研究責任者・研究区分・研究略称・依頼行などを自動復元し、続きから再開できます。</div>
+<div id="csvDropZoneStep1" class="csv-dropzone" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+<label class="ghost-btn" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">台帳CSV・Excelを読み込む<input type="file" id="csvInputStep1" accept=".csv,.xlsx,.xls" style="display:none" multiple></label>
 <span class="help" id="csvStatusStep1"></span>
 </div>
+<div class="help" style="margin-top:.4rem">または、台帳CSV・Excelファイルをこの枠内へドラッグ＆ドロップでも読み込めます。</div>
 </div>`:''}
 ${standardFields.length||managerHTML?`<div class="section-title">入力項目</div>`:''}
 ${standardFields.length?`<div class="grid-2">${fieldHTML}</div>`:''}
@@ -522,6 +526,7 @@ ${generatedHTML}
 
   if(stage.id==='intake'){
     document.getElementById('csvInputStep1')?.addEventListener('change',handleCsvLoadFromFile);
+    setupDropZone('csvDropZoneStep1','csvInputStep1');
   }
 
   if(stage.id==='drafts'){
@@ -529,6 +534,7 @@ ${generatedHTML}
 
   if(stage.id==='work'){
     document.getElementById('csvInputStep5')?.addEventListener('change',handleLedgerLoadForBack);
+    setupDropZone('csvDropZoneStep5','csvInputStep5');
     document.querySelectorAll('[data-ledger-row]').forEach(el=>{
       el.addEventListener('change',()=>{
         toggleLedgerRowSelection(+el.dataset.ledgerRow, el.checked);
