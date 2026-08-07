@@ -532,6 +532,24 @@ function resetMailEdits() {
   state.mailTouched = false;
 }
 
+// 現在のメール案（編集済みなら編集内容）を件名・本文の組で返す
+function getMailDraftRecord() {
+  var draft = emailDraft();
+  return {subject: draft.subject, body: draft.body};
+}
+
+// 台帳行からメール件名・本文を復元する（該当列が存在し値があれば反映）
+function restoreMailFromLedger(row) {
+  if (!row) return;
+  var subj = row['メール件名'];
+  var body = row['メール本文'];
+  if (subj || body) {
+    state.mailSubjectEdit = subj || '';
+    state.mailBodyEdit = body || '';
+    state.mailTouched = true;
+  }
+}
+
 // メール編集を初期化
 function initMailEdits() {
   emailDraft();
@@ -603,8 +621,9 @@ function csvEscape(v) {
 function csvFromRequests() {
   var rows = requestRowsData();
   var isApply = pageMode === 'apply';
-  var header = ['起案日','元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)'];
+  var header = ['起案日','元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
   if (isApply) header.splice(header.indexOf('公表日') + 1, 0, '承認日');
+  var mailDraft = getMailDraftRecord();
   var drafter = getValue('drafterName') || '';
   var studyTitle = getValue('studyTitle') || '';
   var managerName = buildManagerDisplay() || '';
@@ -637,7 +656,8 @@ function csvFromRequests() {
       getValue('managerName2') || '', getValue('managerAffil2') || '', getValue('managerDept2') || '', getValue('managerTitle2') || '',
       state.sendDate || '', paths[idx] || '', r.facilityType || '', r.facilityDetail || '',
       state.stepDurations['intake'] || 0, state.stepDurations['folders'] || 0, state.stepDurations['drafts'] || 0,
-      state.stepDurations['files'] || 0, state.stepDurations['work'] || 0, state.stepDurations['path'] || 0, state.stepDurations['send'] || 0);
+      state.stepDurations['files'] || 0, state.stepDurations['work'] || 0, state.stepDurations['path'] || 0, state.stepDurations['send'] || 0,
+      mailDraft.subject, mailDraft.body);
     return rowArr.map(csvEscape).join(',');
   }).join('\n');
   return header.map(csvEscape).join(',') + '\n' + body;
@@ -782,6 +802,7 @@ function handleCsvLoadFromFile(ev) {
       if (first['起案日']) state.draftDate = normalizeToYmdSlash(first['起案日']);
       if (first['管理者報告メール送信日']) state.sendDate = first['管理者報告メール送信日'];
       state.managerPaths = parsed.rows.map(function(r) { return r['管理者側フォルダパス'] || ''; });
+      restoreMailFromLedger(first);
       var cnt = parsed.rows.length;
       var msg = '\u2705 ' + cnt + '件の依頼行を読み込み、研究課題情報・研究責任者・研究区分を復元しました。';
       fileStatuses.csv = msg;
@@ -820,6 +841,7 @@ function handleLedgerLoadForBack(ev) {
       state.loadedLedgerRows = parsed.rows;
       state.selectedLedgerIndexes = parsed.rows.map(function(_, i) { return i; });
       state.managerPaths = parsed.rows.map(function(r) { return r['管理者側フォルダパス'] || ''; });
+      restoreMailFromLedger(parsed.rows[0]);
       syncRequestRowsFromSelectedLedger();
       fileStatuses.csvStep5 = '✅ 台帳CSV／Excelを読み込みました。対象行を選択してください。';
       renderAll();
@@ -891,10 +913,13 @@ function ledgerCsvForDownload() {
   if (!headers.includes('step5(秒)')) headers.push('step5(秒)');
   if (!headers.includes('step6(秒)')) headers.push('step6(秒)');
   if (!headers.includes('step7(秒)')) headers.push('step7(秒)');
+  if (!headers.includes('メール件名')) headers.push('メール件名');
+  if (!headers.includes('メール本文')) headers.push('メール本文');
 
   var sendDate = getValue('sendDate') || '';
   var draftDate = state.draftDate || todayFormatted();
   var paths = state.managerPaths || [];
+  var mailDraft = getMailDraftRecord();
   var studyTitle = getValue('studyTitle') || '';
   var managerName = buildManagerDisplay() || '';
   var drafter = getValue('drafterName') || '';
@@ -974,6 +999,8 @@ function ledgerCsvForDownload() {
     obj['step7(秒)'] = state.stepDurations['send'] || 0;
     if (!obj['自施設他施設']) obj['自施設他施設'] = requestRowsData()[idx]?.facilityType || '';
     if (!obj['報告詳細']) obj['報告詳細'] = requestRowsData()[idx]?.facilityDetail || '';
+    obj['メール件名'] = mailDraft.subject;
+    obj['メール本文'] = mailDraft.body;
     return obj;
   });
   var body = rows.map(function(r) {
