@@ -1030,29 +1030,42 @@ function downloadUpdatedLedgerCsv() {
 // docx関連
 // ============================================================
 
-// docxテンプレート読み込みハンドラ（報告案）
-function handleReportTemplateDocxLoad(ev) {
-  var file = ev.target.files && ev.target.files[0];
+// docxテンプレート読み込みの汎用ヘルパー
+function loadDocxTemplate(ev, cfg) {
+  var file = ev && ev.target && ev.target.files && ev.target.files[0];
+  var statusKey = cfg.statusKey;
+  var statusElId = cfg.statusElId;
   if (!file) {
-    fileStatuses.reportDocx = 'ファイルが選択されていません。';
-    var el = document.getElementById('reportDocxTemplateStatus');
-    if (el) el.textContent = fileStatuses.reportDocx;
+    fileStatuses[statusKey] = 'ファイルが選択されていません。';
+    var el0 = document.getElementById(statusElId);
+    if (el0) el0.textContent = fileStatuses[statusKey];
     return;
   }
   var reader = new FileReader();
   reader.onload = function(e) {
-    reportTemplateDocxBuffer = e.target.result;
-    reportTemplateDocxName = file.name || '報告案テンプレート.docx';
-    fileStatuses.reportDocx = '✅ ひな形（' + reportTemplateDocxName + '）を読み込みました。';
-    var el = document.getElementById('reportDocxTemplateStatus');
-    if (el) el.textContent = fileStatuses.reportDocx;
+    cfg.onLoad(e.target.result, file);
+    var el = document.getElementById(statusElId);
+    if (el) el.textContent = fileStatuses[statusKey];
   };
   reader.onerror = function() {
-    fileStatuses.reportDocx = 'テンプレート読込に失敗しました。';
-    var el = document.getElementById('reportDocxTemplateStatus');
-    if (el) el.textContent = fileStatuses.reportDocx;
+    fileStatuses[statusKey] = 'テンプレート読込に失敗しました。';
+    var el = document.getElementById(statusElId);
+    if (el) el.textContent = fileStatuses[statusKey];
   };
   reader.readAsArrayBuffer(file);
+}
+
+// docxテンプレート読み込みハンドラ（報告案）
+function handleReportTemplateDocxLoad(ev) {
+  loadDocxTemplate(ev, {
+    statusKey: 'reportDocx',
+    statusElId: 'reportDocxTemplateStatus',
+    onLoad: function(result, file) {
+      reportTemplateDocxBuffer = result;
+      reportTemplateDocxName = file.name || '報告案テンプレート.docx';
+      fileStatuses.reportDocx = '✅ ひな形（' + reportTemplateDocxName + '）を読み込みました。';
+    }
+  });
 }
 
 // 報告案docxデータを生成
@@ -1281,20 +1294,25 @@ function reportDocxDataForRow(r) {
   };
 }
 
-// 報告案docxをダウンロード
-async function downloadReportDocxForRow(idx) {
-  if (!reportTemplateDocxBuffer) {
-    fileStatuses.reportDocx = '先に報告案ひな形（.docx）を読み込んでください。';
+// docx出力前の共通ガード（ひな形・ライブラリ確認）。成功時はtrue
+function docxExportGuard(buffer, statusKey, noTemplateMsg) {
+  if (!buffer) {
+    fileStatuses[statusKey] = noTemplateMsg;
     renderTemplate();
-    return;
+    return false;
   }
   if (!ensureDocxLibReady()) {
-    fileStatuses.reportDocx = 'docx差し込みライブラリの読み込みに失敗しました。';
+    fileStatuses[statusKey] = 'docx差し込みライブラリの読み込みに失敗しました。';
     renderTemplate();
-    return;
+    return false;
   }
-  var rows = requestRowsData();
-  var r = rows[idx];
+  return true;
+}
+
+// 報告案docxをダウンロード
+async function downloadReportDocxForRow(idx) {
+  if (!docxExportGuard(reportTemplateDocxBuffer, 'reportDocx', '先に報告案ひな形（.docx）を読み込んでください。')) return;
+  var r = requestRowsData()[idx];
   if (!r) {
     fileStatuses.reportDocx = '対象の依頼行が見つかりません。';
     renderTemplate();
@@ -1314,25 +1332,13 @@ async function downloadReportDocxForRow(idx) {
 
 // 複数依頼の報告案docxをダウンロード
 async function downloadCombinedReportDocx() {
-  if (!reportTemplateDocxBuffer) {
-    fileStatuses.reportDocx = '先に報告案ひな形（.docx）を読み込んでください。';
-    renderTemplate();
-    return;
-  }
-  if (!ensureDocxLibReady()) {
-    fileStatuses.reportDocx = 'docx差し込みライブラリの読み込みに失敗しました。';
-    renderTemplate();
-    return;
-  }
-
-  var rows = requestRowsData();
-  var r = rows[0];
+  if (!docxExportGuard(reportTemplateDocxBuffer, 'reportDocx', '先に報告案ひな形（.docx）を読み込んでください。')) return;
+  var r = requestRowsData()[0];
   if (!r) {
     fileStatuses.reportDocx = '対象の依頼行がありません。';
     renderTemplate();
     return;
   }
-
   try {
     var blob = renderDocxFromTemplate(reportTemplateDocxBuffer.slice(0), reportDocxDataForRow(r));
     var outType = outputCategory(r.type);
@@ -1348,27 +1354,15 @@ async function downloadCombinedReportDocx() {
 
 // docxテンプレート読み込みハンドラ（起案文）
 function handleTemplateDocxLoad(ev) {
-  var file = ev.target.files && ev.target.files[0];
-  if (!file) {
-    fileStatuses.docx = 'ファイルが選択されていません。';
-    var el = document.getElementById('docxTemplateStatus');
-    if (el) el.textContent = fileStatuses.docx;
-    return;
-  }
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    templateDocxBuffer = e.target.result;
-    templateDocxName = file.name || '起案テンプレート.docx';
-    fileStatuses.docx = '✅ ひな形（' + templateDocxName + '）を読み込みました。';
-    var el = document.getElementById('docxTemplateStatus');
-    if (el) el.textContent = fileStatuses.docx;
-  };
-  reader.onerror = function() {
-    fileStatuses.docx = 'テンプレート読込に失敗しました。';
-    var el = document.getElementById('docxTemplateStatus');
-    if (el) el.textContent = fileStatuses.docx;
-  };
-  reader.readAsArrayBuffer(file);
+  loadDocxTemplate(ev, {
+    statusKey: 'docx',
+    statusElId: 'docxTemplateStatus',
+    onLoad: function(result, file) {
+      templateDocxBuffer = result;
+      templateDocxName = file.name || '起案テンプレート.docx';
+      fileStatuses.docx = '✅ ひな形（' + templateDocxName + '）を読み込みました。';
+    }
+  });
 }
 
 // docx用テキストを安全に処理
@@ -1738,6 +1732,13 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
+// 連番を2桁ゼロ埋めラベルに整形（数値は先頭0埋め、それ以外はそのまま）
+function seqLabel(v) {
+  var n = String(v || '').trim();
+  var m = n.match(/^(\d+)(?:\.\d+)?$/);
+  return m ? m[1].padStart(2, '0') : n;
+}
+
 // jRCT URL Excelを生成
 function generateJrctUrlXlsx(allRows) {
   if (typeof XLSX === 'undefined') return null;
@@ -1766,11 +1767,6 @@ function jRCTUrlFileName(r) {
   var naming = NAMING_MASTER.find(function(x) { return x.source === 'jRCT_URL'; });
   if (!naming) return null;
   var prefix = requestOutputNo(r);
-  var seqLabel = function(v) {
-    var n = String(v || '').trim();
-    var m = n.match(/^(\d+)(?:\.\d+)?$/);
-    return m ? m[1].padStart(2, '0') : n;
-  };
   var parts = naming.pattern.slice();
   if (parts.length >= 3) parts[2] = seqLabel(parts[2]);
   return [prefix].concat(parts.slice(1)).join('_') + '.xlsx';
@@ -1778,18 +1774,8 @@ function jRCTUrlFileName(r) {
 
 // 起案文docxをダウンロード
 async function downloadDraftDocxForRow(idx) {
-  if (!templateDocxBuffer) {
-    fileStatuses.docx = '先に起案文ひな形（.docx）を読み込んでください。';
-    renderTemplate();
-    return;
-  }
-  if (!ensureDocxLibReady()) {
-    fileStatuses.docx = 'docx差し込みライブラリの読み込みに失敗しました。';
-    renderTemplate();
-    return;
-  }
-  var rows = requestRowsData();
-  var r = rows[idx];
+  if (!docxExportGuard(templateDocxBuffer, 'docx', '先に起案文ひな形（.docx）を読み込んでください。')) return;
+  var r = requestRowsData()[idx];
   if (!r) {
     fileStatuses.docx = '対象の依頼行が見つかりません。';
     renderTemplate();
@@ -1809,25 +1795,13 @@ async function downloadDraftDocxForRow(idx) {
 
 // 複数依頼の起案文docxをダウンロード
 async function downloadCombinedDraftDocx() {
-  if (!templateDocxBuffer) {
-    fileStatuses.docx = '先に起案文ひな形（.docx）を読み込んでください。';
-    renderTemplate();
-    return;
-  }
-  if (!ensureDocxLibReady()) {
-    fileStatuses.docx = 'docx差し込みライブラリの読み込みに失敗しました。';
-    renderTemplate();
-    return;
-  }
-
-  var rows = requestRowsData();
-  var r = rows[0];
+  if (!docxExportGuard(templateDocxBuffer, 'docx', '先に起案文ひな形（.docx）を読み込んでください。')) return;
+  var r = requestRowsData()[0];
   if (!r) {
     fileStatuses.docx = '対象の依頼行がありません。';
     renderTemplate();
     return;
   }
-
   try {
     var blob = renderDocxFromTemplate(templateDocxBuffer.slice(0), docxDataForRow(r));
     var outType = outputCategory(r.type);
@@ -2135,6 +2109,25 @@ function renderRequestRows(hostOverride) {
       setRequestRow(i, 'facilityDetail', el.value);
     });
   });
+
+  // data-r-url / data-r-approval / data-r-content / data-r-notes の共通バインド
+  function bindRowSimple(attrSuffix, key) {
+    primaryHost.querySelectorAll('[data-r-' + attrSuffix + ']').forEach(function(el) {
+      el.addEventListener('input', function() {
+        setRequestRow(+el.dataset['r' + attrSuffix[0].toUpperCase() + attrSuffix.slice(1)], key, el.value);
+        renderTemplate();
+      });
+      el.addEventListener('change', function() {
+        setRequestRow(+el.dataset['r' + attrSuffix[0].toUpperCase() + attrSuffix.slice(1)], key, el.value);
+        renderAll();
+      });
+    });
+  }
+  bindRowSimple('url', 'url');
+  bindRowSimple('approval', 'approval');
+  bindRowSimple('content', 'content');
+  bindRowSimple('notes', 'notes');
+
   primaryHost.querySelectorAll('[data-r-base]').forEach(function(el) {
     el.addEventListener('input', function() {
       var i = +el.dataset.rBase;
@@ -2180,54 +2173,6 @@ function renderRequestRows(hostOverride) {
     el.addEventListener('change', function() {
       var i = +el.dataset.rDate;
       setRequestRow(i, 'date', el.value);
-      renderAll();
-    });
-  });
-  primaryHost.querySelectorAll('[data-r-url]').forEach(function(el) {
-    el.addEventListener('input', function() {
-      var i = +el.dataset.rUrl;
-      setRequestRow(i, 'url', el.value);
-      renderTemplate();
-    });
-    el.addEventListener('change', function() {
-      var i = +el.dataset.rUrl;
-      setRequestRow(i, 'url', el.value);
-      renderAll();
-    });
-  });
-  primaryHost.querySelectorAll('[data-r-approval]').forEach(function(el) {
-    el.addEventListener('input', function() {
-      var i = +el.dataset.rApproval;
-      setRequestRow(i, 'approval', el.value);
-      renderTemplate();
-    });
-    el.addEventListener('change', function() {
-      var i = +el.dataset.rApproval;
-      setRequestRow(i, 'approval', el.value);
-      renderAll();
-    });
-  });
-  primaryHost.querySelectorAll('[data-r-content]').forEach(function(el) {
-    el.addEventListener('input', function() {
-      var i = +el.dataset.rContent;
-      setRequestRow(i, 'content', el.value);
-      renderTemplate();
-    });
-    el.addEventListener('change', function() {
-      var i = +el.dataset.rContent;
-      setRequestRow(i, 'content', el.value);
-      renderAll();
-    });
-  });
-  primaryHost.querySelectorAll('[data-r-notes]').forEach(function(el) {
-    el.addEventListener('input', function() {
-      var i = +el.dataset.rNotes;
-      setRequestRow(i, 'notes', el.value);
-      renderTemplate();
-    });
-    el.addEventListener('change', function() {
-      var i = +el.dataset.rNotes;
-      setRequestRow(i, 'notes', el.value);
       renderAll();
     });
   });
@@ -2301,12 +2246,6 @@ function namingRulesForRow(r) {
       requiredCount: 0
     };
   }
-
-  var seqLabel = function(v) {
-    var n = String(v || '').trim();
-    var m = n.match(/^(\d+)(?:\.\d+)?$/);
-    return m ? m[1].padStart(2, '0') : n;
-  };
 
   var html = items.map(function(it, idx) {
     var parts = it.pattern.slice();
