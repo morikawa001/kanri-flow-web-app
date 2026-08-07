@@ -669,6 +669,7 @@ CSCC側：${h(fs.cscc)}
           </div>
           <div class="template-block" style="margin-top:.75rem">
             ${naming.html}
+            ${applyNamingContentCard(no, r)}
           </div>
         </div>
       `;
@@ -1212,6 +1213,29 @@ function applyContentMask(){
     var masked=contentDisplayMask(raw);
     if(inp.value!==masked) inp.value=masked;
   });
+}
+// ステップ3「ファイル名候補・必須資料」に「生成後の起案番号_申請内容」を項目として追加する（applyのみ）
+function applyNamingContentCard(no, r){
+  if(pageMode!=='apply') return '';
+  var contentRaw=(r&&r.content||'').trim();
+  var content=contentDisplayMask(contentRaw);
+  if(!content){
+    return '<div class="template-card">' +
+      '<h4>生成後の起案番号_申請内容</h4>' +
+      '<div class="mono">必須：状況により\n想定ファイル名：\n' + h(no || '') + '_申請内容</div>' +
+      '<div class="help" style="margin-top:.4rem">ステップ1の申請内容欄を入力すると、そのデータがファイル名に反映されます。</div>' +
+      '</div>';
+  }
+  var filename=(no||'')+'_'+content.replace(/[\r\n]+/g,'').replace(/[\s　]+/g,'_').replace(/[\\\/:*?"<>|]/g,'_').replace(/_+$/g,'');
+  return '<div class="template-card">' +
+    '<h4>生成後の起案番号_申請内容</h4>' +
+    '<div class="mono">必須：状況により（ステップ1申請内容）' +
+    '\n想定ファイル名：\n' + h(filename) +
+    '</div>' +
+    '<div style="margin-top:.4rem;display:flex;gap:.4rem;flex-wrap:wrap;">' +
+    '<button type="button" class="ghost-btn" data-copy-filename data-filename="' + h(filename) + '">ファイル名をコピー</button>' +
+    '</div>' +
+    '</div>';
 }
 const ASSIST_DATA = {
   intake:{
