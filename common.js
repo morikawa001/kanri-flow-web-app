@@ -1013,6 +1013,8 @@ function reportDocxDataForRow(r) {
       todokedeGaiRow ? formatDateToJapanese(todokedeGaiRow.date || '') : ''
     ]),
 
+    '承認日': (pageMode === 'apply') ? formatDateToJapanese(relatedRows[0]?.approval || '') : '',
+
     '研究種別_特定': mark(isSpecific),
     '特定内訳_未承認適応外': mark(isSpecific && isUnapproved),
     '特定内訳_資金提供': mark(isSpecific && isFunding),
@@ -1362,6 +1364,8 @@ function docxDataForRow(r) {
       ['変更', '軽微変更', '初回公表', '届出外'],
       [changeRow?.url || '', minorRow?.url || '', initialRow?.url || '', todokedeGaiRow?.url || '']
     ),
+
+    '承認日': (pageMode === 'apply') ? formatDateToJapanese(requestRowsData()[0]?.approval || '') : '',
 
     '報告事項一覧': safeDocxText((function() {
       var pairs = reportPairs.map(function(arr) { return [arr[0], formatDateToJapanese(arr[1]?.date || '')]; }).filter(function(arr) { return arr[0] || arr[1]; });
@@ -1957,7 +1961,7 @@ function renderRequestRows(hostOverride) {
     var datePlaceholder = isPeriodic ? '例：2026/4/5～2026/9/30' : '例：2026/07/05';
     var dateField = isApply
       ? '<div class="field"><label>承認日</label>' +
-        '<input class="input" data-r-approval="' + i + '" value="' + h(r.approval || '') + '" placeholder="例：2026/07/05">' +
+        '<input class="input" data-r-approval="' + i + '" value="' + h(formatDateToJapanese(r.approval||'')) + '" placeholder="例：2026年07月05日">' +
         '</div>'
       : '<div class="field"><label>' + dateLabel + '</label>' +
         '<input class="input" data-r-date="' + i + '" value="' + h(r.date || '') + '" placeholder="' + datePlaceholder + '"' + (isPeriodic ? ' pattern="\\d{4}/\\d{1,2}/\\d{1,2}～\\d{4}/\\d{1,2}/\\d{1,2}" title="形式：yyyy/m/d～yyyy/m/d"' : '') + '>' +

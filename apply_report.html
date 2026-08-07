@@ -69,7 +69,7 @@ html[data-theme="dark"] body.page-apply{--primary:#4fa3e8;--primary-2:#79b9f0;--
 </main>
 </div>
 <script>var pageMode = 'apply';</script>
-<script src="common.js?v=c1dbe1e-apply-approval"></script>
+<script src="common.js?v=c1dbe1e-apply-docx"></script>
 <script src="state.js?v=4b1851b"></script>
 <script src="utils.js?v=4b1851b"></script>
 <script src="dates.js?v=4b1851b"></script>
@@ -966,6 +966,33 @@ function parseJRCTHtml(input){
     if(!m) return undefined;
     return /[■☑☒]/.test(m[1]);
   }
+  function convertDateBlock(text){
+    let m=text.match(/令和(\d+)年(\d+)月(\d+)日/);
+    if(m){const y=2018+parseInt(m[1]);return y+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}
+    m=text.match(/平成(\d+)年(\d+)月(\d+)日/);
+    if(m){const y=1988+parseInt(m[1]);return y+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}
+    m=text.match(/(\d{4})年(\d+)月(\d+)日/);
+    if(m) return m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');
+    m=text.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if(m) return m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');
+    return '';
+  }
+  function dateFromLabel(label){
+    const vals=findAllVal(label);
+    for(const v of vals){
+      const d=convertDateBlock(v);
+      if(d) return d;
+    }
+    const seen={};
+    for(const ln of lines){
+      if(!ln.includes(label)) continue;
+      for(const token of ln.split(/[\s\t　,、]+/)){
+        const d=convertDateBlock(token);
+        if(d&&!seen[d]){seen[d]=true;return d;}
+      }
+    }
+    return '';
+  }
   data.mailSubject=findVal('平易な研究名称')||findVal('Public Title');
   data.studyTitle=findVal('研究名称')||findVal('Scientific Title');
   data.managerName1=(findVal('統括管理者の氏名')||'').replace(/\s{2,}/g,' ').replace(/^[\s\u3000]+|[\s\u3000]+$/g,'');
@@ -998,6 +1025,28 @@ function parseJRCTHtml(input){
     else{m=pubDateText.match(/(\d{4})年(\d+)月(\d+)日/);if(m) data.pubDate=m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}}
   }
   data.jrctUrl='https://jrct.mhlw.go.jp/latest-detail/'+(data.jrctNo||'');
+  data.approval=(function(){
+    let checkedLine='';
+    for(let i=0;i<lines.length;i++){
+      const m=lines[i].match(/([■☑☒□])\s*(新規申請|変更申請)/);
+      if(!m) continue;
+      if(/[■☑☒]/.test(m[1])) { checkedLine=lines[i]; break; }
+    }
+    if(!checkedLine) return '';
+    const item=checkedLine.match(/(新規申請|変更申請)/);
+    const itemLabel=item?item[1]:'';
+    let block=[checkedLine];
+    for(let j=lines.indexOf(checkedLine)+1;j<lines.length;j++){
+      if(/[■☑☒□]/.test(lines[j])) break;
+      block.push(lines[j]);
+    }
+    const blockText=block.join('\n');
+    const ymd=convertDateBlock(blockText);
+    if(ymd) return ymd;
+    if(itemLabel==='新規申請') return dateFromLabel('申請日（新規）')||dateFromLabel('新規');
+    if(itemLabel==='変更申請') return dateFromLabel('変更日')||dateFromLabel('変更');
+    return '';
+  })();
   // JRCT申請書形式（起案文と同構造）の解析
   const piLine=findVal('研究責任医師');
   if(piLine){
@@ -1080,6 +1129,9 @@ function applyJRCTData(data){
   if(data.isFunding){const el=document.getElementById('studyTypeFunding');if(el&&!el.checked) el.click();}
   if(data.pubDate&&state.requestRows&&state.requestRows[0]){
     state.requestRows[0].date=data.pubDate;
+  }
+  if(data.approval&&state.requestRows&&state.requestRows[0]){
+    state.requestRows[0].approval=data.approval;
   }
   if(data.jrctUrl&&state.requestRows&&state.requestRows[0]){
     state.requestRows[0].url=data.jrctUrl;
