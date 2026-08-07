@@ -1032,6 +1032,12 @@ function parseJRCTHtml(input){
       if(!m) continue;
       if(/[■☑☒]/.test(m[1])) { checkedLine=lines[i]; break; }
     }
+    if(!checkedLine){
+      for(let i=0;i<lines.length;i++){
+        const line=lines[i];
+        if(/(新規申請|変更申請)/.test(line) && convertDateBlock(line)){ checkedLine=line; break; }
+      }
+    }
     if(!checkedLine) return '';
     const item=checkedLine.match(/(新規申請|変更申請)/);
     const itemLabel=item?item[1]:'';
