@@ -19,13 +19,21 @@
 .assist-highlight{border-color:var(--error)!important;box-shadow:0 0 0 3px rgba(181,52,130,.15)!important;animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(181,52,130,.15)}50%{box-shadow:0 0 0 5px rgba(181,52,130,.25)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+html[data-theme="light"] body.page-publish{
+  --primary:#0d9f6e;--primary-2:#0b8460;--primary-light:#e2f5ec;--primary-glow:rgba(13,159,110,.15);
+  --bg:#eef8f3;--surface-2:#f7fbf8;--surface-3:#e3f3eb;--border:#cfe7db;--flow-guide:#e9f6ef;
+}
+html[data-theme="dark"] body.page-publish{
+  --primary:#41a593;--primary-2:#69d6a9;--primary-light:#12392a;--primary-glow:rgba(65,197,147,.2);
+  --bg:#0f1a16;--surface-3:#123b2b;--border:#1f5840;--flow-guide:#101f19;
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
 <script src="https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js"></script>
 </head>
-<body>
+<body class="page-publish">
 <div class="app">
 <header class="topbar">
 <div class="brand">
