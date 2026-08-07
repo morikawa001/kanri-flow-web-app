@@ -2076,7 +2076,7 @@ function renderRequestRows(hostOverride) {
       '</div>' +
       urlField +
       (pageMode === 'apply' ? '<div class="field" style="margin-top:.7rem"><label>申請内容</label>' +
-      '<input class="input" data-r-content="' + i + '" value="' + h(r.content || '') + '" placeholder="申請内容を入力">' +
+      '<textarea class="input" data-r-content="' + i + '" style="min-height:80px;resize:vertical" placeholder="申請内容を入力">' + h(r.content || '') + '</textarea>' +
       '</div>' +
       '<div class="field" style="margin-top:.7rem"><label>備考</label>' +
       '<input class="input" data-r-notes="' + i + '" value="' + h(r.notes || '') + '" placeholder="備考を入力">' +
