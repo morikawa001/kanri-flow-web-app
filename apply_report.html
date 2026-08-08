@@ -759,7 +759,6 @@ jRCT URL：${h(r.url||'')}</div>
   <div style="margin-top:.75rem;display:flex;gap:.6rem;flex-wrap:wrap">
     <button class="primary-btn" id="downloadAllDocxBtn">起案docxを1枚出力</button>
     <button class="ghost-btn" id="downloadAllReportDocxBtn">報告案docxを1枚出力</button>
-    <button class="ghost-btn" id="downloadJrctUrlBtn">jRCT URL Excelを出力</button>
   </div>
 </div>
 
@@ -795,14 +794,6 @@ jRCT URL：${h(r.url||'')}</div>
   document.getElementById('reportTemplateDocxInput')?.addEventListener('change', handleReportTemplateDocxLoad);
   document.getElementById('downloadAllDocxBtn')?.addEventListener('click', downloadCombinedDraftDocx);
   document.getElementById('downloadAllReportDocxBtn')?.addEventListener('click', downloadCombinedReportDocx);
-  document.getElementById('downloadJrctUrlBtn')?.addEventListener('click', ()=>{
-    const rows = requestRowsData();
-    if(!rows.length){alert('依頼行がありません。');return;}
-    const blob = generateJrctUrlXlsx(rows);
-    if(!blob){alert('SheetJSライブラリが読み込まれていないか、jRCTデータがありません。');return;}
-    const name = jRCTUrlFileName(rows[0]) || 'jRCT_URL.xlsx';
-    downloadBlob(blob, name);
-  });
   document.getElementById('downloadCsvBtn')?.addEventListener('click', downloadCsvFromRequests);
   document.getElementById('downloadZipBtn')?.addEventListener('click', downloadFolderZip);
   bindMailEditorEvents('mailSubjectEdit', 'mailBodyEdit', 'pathMailStatus');
