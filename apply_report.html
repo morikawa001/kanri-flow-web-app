@@ -313,7 +313,14 @@ ${f.options.map(o=>`<option value="${h(o)}" ${currentVal===o?'selected':''}>${h(
 <div class="template-card" style="margin-top:.7rem">
 <div class="help" style="margin-bottom:.7rem">2人目は空欄可です。入力がある場合のみメール本文やCSVの研究責任者欄に追加表示されます。</div>
 <div class="grid-4">
-<div class="field"><label>所属機関</label><input class="input" data-bind="managerAffil1" id="managerAffil1" value="${h(state.managerAffil1||'')}" placeholder="例：○○病院"></div>
+<div class="field"><label>所属機関</label>
+<div style="display:grid;gap:.35rem">
+<select class="input" data-preset-select="managerAffil1" style="height:auto;padding:.45rem .6rem">
+<option value="">選択してください</option>
+<option value="静岡県立静岡がんセンター" ${state.managerAffil1==='静岡県立静岡がんセンター'?'selected':''}>静岡県立静岡がんセンター</option>
+<option value="__free" ${(state.managerAffil1&&state.managerAffil1!=='静岡県立静岡がんセンター')?'selected':''}>自由記載</option>
+</select>
+<input class="input" data-bind="managerAffil1" data-preset-free="managerAffil1" id="managerAffil1" value="${h(state.managerAffil1||'')}" placeholder="例：○○病院" ${(state.managerAffil1&&state.managerAffil1!=='静岡県立静岡がんセンター')?'':'style="display:none"'}></div></div>
 <div class="field"><label>所属部署</label><input class="input" data-bind="managerDept1" id="managerDept1" value="${h(state.managerDept1||'')}" placeholder="例：呼吸器内科"></div>
 <div class="field"><label>職名</label><input class="input" data-bind="managerTitle1" id="managerTitle1" value="${h(state.managerTitle1||'')}" placeholder="例：病院長"></div>
 <div class="field"><label>氏名</label><input class="input" data-bind="managerName1" id="managerName1" value="${h(state.managerName1||'')}" placeholder="例：〇〇 〇〇"></div>
@@ -1132,6 +1139,12 @@ function applyJRCTData(data){
     s.call(el,val);
     el.dispatchEvent(new Event('input',{bubbles:true}));
     el.dispatchEvent(new Event('change',{bubbles:true}));
+    const sel=document.querySelector('[data-preset-select="'+id+'"]');
+    if(sel){
+      const hasOpt=Array.from(sel.querySelectorAll('option')).some(o=>o.value===val);
+      sel.value=hasOpt?val:'__free';
+      if(el&&el.style){el.style.display=hasOpt?'none':'';}
+    }
   }
   setVal('mailSubject',data.mailSubject);
   setVal('studyTitle',data.studyTitle);
