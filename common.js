@@ -2079,6 +2079,14 @@ function renderRequestRows(hostOverride) {
       '<textarea class="input" data-r-content="' + i + '" style="min-height:80px;resize:vertical" placeholder="申請内容を入力">' + h(r.content || '') + '</textarea>' +
       '</div>' +
       '<div class="field" style="margin-top:.7rem"><label>備考</label>' +
+      '<select class="select" data-r-notes-preset="' + i + '">' +
+      '<option value="">備考の定型文を選択</option>' +
+      '<option value="all-sites" ' + (r.notesPreset === 'all-sites' ? 'selected' : '') + '>全施設分提供される場合</option>' +
+      '<option value="scc-unchanged" ' + (r.notesPreset === 'scc-unchanged' ? 'selected' : '') + '>静がんの変更なしの場合</option>' +
+      '<option value="scc-only" ' + (r.notesPreset === 'scc-only' ? 'selected' : '') + '>静がん分のみ提供される場合</option>' +
+      '<option value="not-provided" ' + (r.notesPreset === 'not-provided' ? 'selected' : '') + '>提供されない場合</option>' +
+      '<option value="free" ' + (r.notesPreset === 'free' ? 'selected' : '') + '>自由記載</option>' +
+      '</select>' +
       '<input class="input" data-r-notes="' + i + '" value="' + h(r.notes || '') + '" placeholder="備考を入力">' +
       '</div>' : '') +
       '<div class="help">1行ごとに「報告区分」と「元の起案番号」を入力すると、生成後の起案番号が自動計算されます。</div>' +
@@ -2127,6 +2135,22 @@ function renderRequestRows(hostOverride) {
   bindRowSimple('approval', 'approval');
   bindRowSimple('content', 'content');
   bindRowSimple('notes', 'notes');
+  // 備考の定型文プルダウン（applyのみ・選択内容を備考欄へ反映）
+  primaryHost.querySelectorAll('[data-r-notes-preset]').forEach(function(el) {
+    el.addEventListener('change', function() {
+      var i = +el.dataset.rNotesPreset;
+      var presetTexts = {
+        'all-sites': '他施設の分担医師リスト及びCOI様式Eは添付を省略する。データは保管済。',
+        'scc-unchanged': '当院に変更はなく、他施設の分担医師リスト及びCOI様式Eのみの提供であったため添付を省略する。データは保管済。',
+        'scc-only': '他施設の分担医師リスト及びCOI様式Eは提供されていない。',
+        'not-provided': '分担医師リスト及びCOI様式Eは提供されていない。'
+      };
+      var val = el.value;
+      setRequestRow(i, 'notesPreset', val);
+      setRequestRow(i, 'notes', val === 'free' ? '' : (presetTexts[val] || ''));
+      renderAll();
+    });
+  });
 
   primaryHost.querySelectorAll('[data-r-base]').forEach(function(el) {
     el.addEventListener('input', function() {
