@@ -1270,9 +1270,7 @@ const CONTENT_CHECK_ITEMS = [
       { key:'chgMinor', label:'軽微', ph:'', w:'sm' },
       { key:'chgEx', label:'届出外', ph:'', w:'sm' }
     ]},
-  { key:'other2', label:'その他（　　　　　　　　　　）' },
   { key:'chgAnnex', label:'（変更内容は別紙のとおり）', indent:true },
-  { key:'plan', label:'実施計画', indent:true },
   { key:'protocol', label:'研究計画書', indent:true },
   { key:'consent', label:'説明同意文書', indent:true },
   { key:'comp', label:'補償の概要', indent:true },
@@ -1280,11 +1278,13 @@ const CONTENT_CHECK_ITEMS = [
   { key:'disease', label:'疾病等が発生した場合の対応に関する手順書', indent:true },
   { key:'monitor', label:'モニタリングに関する手順書', indent:true },
   { key:'audit', label:'監査に関する手順書', indent:true },
+  { key:'doctor', label:'研究分担医師リスト', indent:true },
   { key:'coiA', label:'利益相反管理基準（様式Ａ）', indent:true },
   { key:'coiE', label:'利益相反管理計画（様式Ｅ）', indent:true },
-  { key:'doctor', label:'研究分担医師リスト', indent:true },
+  { key:'plan', label:'実施計画', indent:true },
   { key:'stat', label:'統計解析計画書', indent:true },
-  { key:'other1', label:'その他（　　　　　　　　　　）', indent:true }
+  { key:'other1', label:'その他（　　　　　　　　　　）', indent:true },
+  { key:'other2', label:'その他（　　　　　　　　　　）' }
 ];
 // チェック項目のHTMLを生成（状態は contentCheckState から復元）
 function contentCheckPanelHtml(rowIdx){
