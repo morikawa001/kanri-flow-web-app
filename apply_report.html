@@ -28,6 +28,20 @@ html[data-theme="dark"] body.page-apply{
   --primary:#4fa3e8;--primary-2:#79b9f0;--primary-light:#1b3a5c;--primary-glow:rgba(79,163,232,.2);
   --bg:#0f1a26;--surface-3:#1d3a5c;--border:#33507a;--flow-guide:#122233;
 }
+/* 申請内容チェックパネル（apply専用） */
+.content-check-panel{border:1px solid var(--border);border-radius:var(--r-lg);padding:.7rem .8rem;margin:0 0 .7rem;background:var(--surface)}
+.content-check-title{font-weight:700;font-size:.8rem;color:var(--primary);margin-bottom:.45rem}
+.content-check-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.2rem 0}
+.content-check-row.is-sub{padding-left:1.5rem}
+.content-check-label{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.8rem;white-space:nowrap;color:var(--text)}
+.content-check-label input[type=checkbox]{width:15px;height:15px;accent-color:var(--primary);cursor:pointer}
+.content-check-free{width:min(280px,42%);min-width:130px;font-size:.75rem;padding:.28rem .5rem}
+.content-check-sub{display:inline-flex;align-items:center;gap:.8rem;flex-wrap:wrap;flex:1;min-width:200px}
+.content-check-sub-row{display:inline-flex;align-items:center;gap:.35rem}
+.content-check-sub-row .content-check-label{font-size:.76rem}
+.content-check-inline{width:120px;font-size:.75rem;padding:.22rem .45rem}
+.content-check-inline.w-sm{width:70px}
+.content-check-paren{color:var(--muted);font-size:.78rem;display:inline-flex;align-items:center;gap:.15rem}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -516,6 +530,7 @@ ${generatedHTML}
   });
 
   if(stage.id==='intake') renderRequestRows();
+  if(stage.id==='intake') injectContentCheckPanels();
 
   if(stage.id==='intake'){
     document.getElementById('jrctParseBtn')?.addEventListener('click',()=>{
@@ -1216,6 +1231,94 @@ function applyContentMask(){
     var raw=(state.requestRows&&state.requestRows[i])?state.requestRows[i].content:'';
     var masked=contentDisplayMask(raw);
     if(inp.value!==masked) inp.value=masked;
+  });
+}
+// ============================================================
+// 申請内容チェックパネル（applyのみ・依頼行の「申請内容」欄の直上に表示）
+// ============================================================
+let contentCheckState = {};
+const CONTENT_CHECK_ITEMS = [
+  { key:'new', label:'新規申請' },
+  { key:'chg', label:'変更申請',
+    subs:[
+      { key:'chgDate', label:'変更', ph:'yyyy年mm月dd日' },
+      { key:'chgMinor', label:'軽微', ph:'', w:'sm' },
+      { key:'chgEx', label:'届出外', ph:'', w:'sm' }
+    ]},
+  { key:'chgAnnex', label:'（変更内容は別紙のとおり）', indent:true },
+  { key:'plan', label:'実施計画', indent:true },
+  { key:'protocol', label:'研究計画書' },
+  { key:'consent', label:'説明同意文書', indent:true },
+  { key:'comp', label:'補償の概要', indent:true },
+  { key:'drug', label:'医薬品等の概要を記載した書類' },
+  { key:'disease', label:'疾病等が発生した場合の対応に関する手順書' },
+  { key:'monitor', label:'モニタリングに関する手順書' },
+  { key:'audit', label:'監査に関する手順書' },
+  { key:'coiA', label:'利益相反管理基準（様式Ａ）' },
+  { key:'coiE', label:'利益相反管理計画（様式Ｅ）' },
+  { key:'doctor', label:'研究分担医師リスト' },
+  { key:'stat', label:'統計解析計画書' },
+  { key:'other1', label:'その他（　　　　　　　　　　）' },
+  { key:'other2', label:'その他（　　　　　　　　　　）' }
+];
+// チェック項目のHTMLを生成（状態は contentCheckState から復元）
+function contentCheckPanelHtml(rowIdx){
+  const rows=CONTENT_CHECK_ITEMS.map(function(item){
+    const key=rowIdx+':'+item.key;
+    const st=contentCheckState[key]||{checked:false,free:''};
+    const freeField='<input type="text" class="input content-check-free" data-ccf="'+key+'" value="'+h(st.free)+'" placeholder="自由記載">';
+    if(item.subs){
+      const subsHtml=item.subs.map(function(sub){
+        const skey=key+'.'+sub.key;
+        const sst=contentCheckState[skey]||{checked:false,free:''};
+        return '<span class="content-check-sub-row">'+
+          '<label class="content-check-label"><input type="checkbox" data-cck="'+skey+'"'+(sst.checked?' checked':'')+'> <span>'+h(sub.label)+'</span></label>'+
+          '<span class="content-check-paren">（<input type="text" class="input content-check-inline'+(sub.w==='sm'?' w-sm':'')+'" data-ccf="'+skey+'" value="'+h(sst.free)+'" placeholder="'+h(sub.ph||'')+'">）</span>'+
+          '</span>';
+      }).join('');
+      return '<div class="content-check-row">'+
+        '<label class="content-check-label"><input type="checkbox" data-cck="'+key+'"'+(st.checked?' checked':'')+'> <span>'+h(item.label)+'</span></label>'+
+        '<span class="content-check-sub">'+subsHtml+'</span>'+
+        freeField+
+        '</div>';
+    }
+    return '<div class="content-check-row'+(item.indent?' is-sub':'')+'">'+
+      '<label class="content-check-label"><input type="checkbox" data-cck="'+key+'"'+(st.checked?' checked':'')+'> <span>'+h(item.label)+'</span></label>'+
+      freeField+
+      '</div>';
+  }).join('');
+  return '<div class="content-check-panel" data-content-check-panel>'+
+    '<div class="content-check-title">申請内容チェック</div>'+
+    rows+
+    '</div>';
+}
+// 依頼行の「申請内容」欄の直上にチェックパネルを挿入
+function injectContentCheckPanels(){
+  if(pageMode!=='apply') return;
+  document.querySelectorAll('#multiRequestHost .request-row').forEach(function(row,i){
+    if(row.querySelector('[data-content-check-panel]')) return;
+    const contentField=row.querySelector('[data-r-content]');
+    if(!contentField) return;
+    const field=contentField.closest('.field');
+    if(!field) return;
+    const tmp=document.createElement('div');
+    tmp.innerHTML=contentCheckPanelHtml(i);
+    const panel=tmp.firstElementChild;
+    field.parentNode.insertBefore(panel, field);
+    bindContentCheckEvents(panel);
+  });
+}
+// チェックパネルの入力・チェックを contentCheckState に保存（再描画時も保持）
+function bindContentCheckEvents(panel){
+  panel.querySelectorAll('[data-cck]').forEach(function(cb){
+    cb.addEventListener('change',function(){
+      contentCheckState[cb.dataset.cck]=Object.assign({},contentCheckState[cb.dataset.cck]||{}, {checked:cb.checked});
+    });
+  });
+  panel.querySelectorAll('[data-ccf]').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      contentCheckState[inp.dataset.ccf]=Object.assign({},contentCheckState[inp.dataset.ccf]||{}, {free:inp.value});
+    });
   });
 }
 const ASSIST_DATA = {
