@@ -60,6 +60,7 @@ html[data-theme="dark"] body.page-apply{
 </div>
 <button class="ghost-btn" id="navToggleBtn">ナビON</button>
 <button class="ghost-btn" id="resetBtn" onclick="location.href='https://morikawa001.github.io/kanri_flow/procedure.html'">← 手続き選択に戻る</button>
+<button class="ghost-btn" id="clearInputsBtn" title="入力内容をすべてクリアして最初のステップからやり直します">入力内容をクリア</button>
 <button class="icon-btn" id="guideBtn" aria-label="使い方ガイド" onclick="location.href='https://morikawa001.github.io/kanri_flow/guide.html'" title="使い方ガイド">📖</button>
 <button class="icon-btn" id="themeBtn" aria-label="テーマ切替">🌙</button>
 </div>
@@ -1387,6 +1388,7 @@ function resetAll(){
 }
 window.resetAll=resetAll;
 
+document.getElementById('clearInputsBtn').addEventListener('click',resetAll);
 document.getElementById('resetBtn').addEventListener('click',resetAll);
 document.getElementById('modeFrontBtn').addEventListener('click',()=>{
   state.appMode='front';
