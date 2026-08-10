@@ -1354,7 +1354,7 @@ function bindContentCheckEvents(panel){
     });
   });
 }
-// チェックパネルのチェック済み項目を「■付き箇条書き」で変更内容欄（申請内容）へ書き出す（applyのみ）
+// チェックパネルのチェック済み項目を改行区切りで変更内容欄（申請内容）へ書き出す（applyのみ）
 function syncContentFromPanel(rowIdx){
   if(pageMode!=='apply') return;
   const row=state.requestRows&&state.requestRows[rowIdx];
@@ -1369,21 +1369,21 @@ function syncContentFromPanel(rowIdx){
     if(!item) return;
     if(!checkedFor(item.key)) return;
     if(item.key==='chg'){
-      if(checkedFor('chg.chgDate')) lines.push('■変更（'+(contentCheckState[prefix+'chg.chgDate'].free||'')+'）');
-      if(checkedFor('chg.chgMinor')) lines.push('■軽微（'+(contentCheckState[prefix+'chg.chgMinor'].free||'')+'）');
-      if(checkedFor('chg.chgEx')) lines.push('■届出外（'+(contentCheckState[prefix+'chg.chgEx'].free||'')+'）');
+      if(checkedFor('chg.chgDate')) lines.push('変更（'+(contentCheckState[prefix+'chg.chgDate'].free||'')+'）');
+      if(checkedFor('chg.chgMinor')) lines.push('軽微（'+(contentCheckState[prefix+'chg.chgMinor'].free||'')+'）');
+      if(checkedFor('chg.chgEx')) lines.push('届出外（'+(contentCheckState[prefix+'chg.chgEx'].free||'')+'）');
       return;
     }
     if(item.key==='other1'||item.key==='other2'){
-      lines.push('■その他（'+(contentCheckState[prefix+item.key].free||'')+'）');
+      lines.push('その他（'+(contentCheckState[prefix+item.key].free||'')+'）');
       return;
     }
     if(item.label.charAt(0)==='（'){
-      lines.push('■'+item.label);
+      lines.push(item.label);
       return;
     }
     const st=contentCheckState[prefix+item.key];
-    lines.push('■'+item.label+(st.free?'（'+st.free+'）':''));
+    lines.push(item.label+(st.free?'（'+st.free+'）':''));
   });
   row.content=lines.join('\n');
   const inp=document.querySelector('[data-r-content="'+rowIdx+'"]');
