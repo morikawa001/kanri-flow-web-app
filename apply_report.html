@@ -1364,16 +1364,32 @@ function applyContentCheckFromData(data){
     return String(t||'').replace(/[\s\u3000]+/g,'').replace(/[（(]/g,'(').replace(/[）)]/g,')')
       .replace(/[Ａ-Ｚａ-ｚ０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);});
   }
+  // 項目テキストのうち、ラベルに続く（…）内の記載内容だけを取り出す（無ければ空文字）
+  // ※利益相反の（様式Ａ／様式Ｅ）はラベルの一部のため対象外（NO_PAREN_KEYS）
+  function extractParen(item, matchedLabel, noParen){
+    if(noParen) return '';
+    const ni=norm(item);
+    let rest=ni;
+    if(matchedLabel){
+      const idx=ni.indexOf(matchedLabel);
+      if(idx===-1) return '';
+      rest=ni.slice(idx+matchedLabel.length);
+    }
+    const matches=rest.match(/[（(][^（()）]*[）)]/g)||[];
+    let inner=matches.map(function(m){return m.replace(/^[（(]/,'').replace(/[）)]$/,'');}).join('');
+    return inner.replace(/[\s\u3000]+/g,'').trim();
+  }
   const type=data.contentType||'';
   if(type==='新規') setCheck('new');
   if(type==='変更'){
     setCheck('chg');
     const chg=data.contentChg||{};
     if(chg.dateText) setCheck('chg.chgDate', chg.dateText);
-    if(chg.minor) setCheck('chg.chgMinor');
-    if(chg.ex) setCheck('chg.chgEx');
+    if(chg.minor) setCheck('chg.chgMinor', extractParen((data.contentItems||[]).join('\n'),'軽微',false));
+    if(chg.ex) setCheck('chg.chgEx', extractParen((data.contentItems||[]).join('\n'),'届出外',false));
     if(chg.annex) setCheck('chgAnnex');
   }
+  const NO_PAREN_KEYS={coiA:true, coiE:true};
   const others=[];
   (data.contentItems||[]).forEach(function(item){
     const ni=norm(item);
@@ -1382,14 +1398,18 @@ function applyContentCheckFromData(data){
       setCheck('chg.chgDate', dm?dm[1].replace(/\s/g,''):item);
       return;
     }
-    if(ni.includes('軽微')){ setCheck('chg.chgMinor'); return; }
-    if(ni.includes('届出外')){ setCheck('chg.chgEx'); return; }
+    if(ni.includes('軽微')){ setCheck('chg.chgMinor', extractParen(item,'軽微',false)); return; }
+    if(ni.includes('届出外')){ setCheck('chg.chgEx', extractParen(item,'届出外',false)); return; }
     let key='';
     for(const k in KEY_LABELS){
       if(ni.includes(norm(KEY_LABELS[k]))){ key=k; break; }
     }
-    if(key) setCheck(key);
-    else others.push(item);
+    if(key){
+      setCheck(key, extractParen(item, norm(KEY_LABELS[key]), NO_PAREN_KEYS[key]));
+    }else{
+      const ep=extractParen(item,'',false);
+      others.push(ep||item);
+    }
   });
   if(others.length>0) setCheck('other1', others[0]);
   if(others.length>1) setCheck('other2', others[1]);
