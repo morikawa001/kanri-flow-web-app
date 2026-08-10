@@ -1121,6 +1121,30 @@ function parseJRCTHtml(input){
     }else{
       data.content=contentBody||cText;
     }
+    // 申請内容チェックパネルへ反映するための構造化データ
+    data.contentType=newChecked===true?'新規':(chgChecked===true?'変更':'');
+    data.contentItems=(contentBody||'').split('\n').map(function(x){return x.trim();}).filter(function(x){return x&&!x.includes('新規提出')&&!x.includes('変更提出');});
+    const chgLine=cText.split('\n').find(function(l){return l.includes('変更提出');})||cText;
+    data.contentChg={
+      dateText:(function(){
+        const m=chgLine.match(/[（(]\s*([■☑☒□])\s*変更\s*[（(]([^）)]*)[）)]/);
+        if(m&&/[■☑☒]/.test(m[1])) return m[2].trim();
+        return '';
+      })(),
+      minor:(function(){
+        const m=chgLine.match(/([■☑☒□])\s*軽微/);
+        return !!(m&&/[■☑☒]/.test(m[1]));
+      })(),
+      ex:(function(){
+        const m=chgLine.match(/([■☑☒□])\s*届出外/);
+        return !!(m&&/[■☑☒]/.test(m[1]));
+      })(),
+      annex:(function(){
+        const m=cText.match(/([■☑☒□])\s*変更内容は別紙のとおり/);
+        return !!(m&&/[■☑☒]/.test(m[1]));
+      })()
+    };
+    data.contentChg.date=convertDateBlock(data.contentChg.dateText);
   }
   function extractCheckedText(lines){
     const out=[];
@@ -1209,6 +1233,7 @@ function applyJRCTData(data){
     if(data.content) state.requestRows[0].content=data.content;
     if(data.notes) state.requestRows[0].notes=data.notes;
   }
+  applyContentCheckFromData(data);
   renderAll();
 }
 // 申請内容欄の表示用マスク（自動入力時にtype目印「新規提出」「変更提出」や括弧付き変更日を
@@ -1320,6 +1345,54 @@ function bindContentCheckEvents(panel){
       contentCheckState[inp.dataset.ccf]=Object.assign({},contentCheckState[inp.dataset.ccf]||{}, {free:inp.value});
     });
   });
+}
+// 貼り付け自動入力で得た申請内容データをチェックパネルへ反映（applyのみ・行0に適用）
+function applyContentCheckFromData(data){
+  if(pageMode!=='apply') return;
+  const prefix='0:';
+  const rowKey=function(key){ return prefix+key; };
+  Object.keys(contentCheckState).forEach(function(k){ if(k.indexOf(prefix)===0) delete contentCheckState[k]; });
+  function setCheck(key,free){ contentCheckState[rowKey(key)]={checked:true,free:free||''}; }
+  const KEY_LABELS={
+    plan:'実施計画', protocol:'研究計画書', consent:'説明同意文書', comp:'補償の概要',
+    drug:'医薬品等の概要を記載した書類', disease:'疾病等が発生した場合の対応に関する手順書',
+    monitor:'モニタリングに関する手順書', audit:'監査に関する手順書',
+    coiA:'利益相反管理基準', coiE:'利益相反管理計画', doctor:'研究分担医師リスト', stat:'統計解析計画書',
+    chgAnnex:'変更内容は別紙のとおり'
+  };
+  function norm(t){
+    return String(t||'').replace(/[\s\u3000]+/g,'').replace(/[（(]/g,'(').replace(/[）)]/g,')')
+      .replace(/[Ａ-Ｚａ-ｚ０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);});
+  }
+  const type=data.contentType||'';
+  if(type==='新規') setCheck('new');
+  if(type==='変更'){
+    setCheck('chg');
+    const chg=data.contentChg||{};
+    if(chg.dateText) setCheck('chg.chgDate', chg.dateText);
+    if(chg.minor) setCheck('chg.chgMinor');
+    if(chg.ex) setCheck('chg.chgEx');
+    if(chg.annex) setCheck('chgAnnex');
+  }
+  const others=[];
+  (data.contentItems||[]).forEach(function(item){
+    const ni=norm(item);
+    if(/^変更/.test(ni)&&/\d{4}/.test(ni)){
+      const dm=item.match(/(\d{4}[\s年\/\-]?\d{1,2}[\s月\/\-]?\d{1,2}\s*日?)/);
+      setCheck('chg.chgDate', dm?dm[1].replace(/\s/g,''):item);
+      return;
+    }
+    if(ni.includes('軽微')){ setCheck('chg.chgMinor'); return; }
+    if(ni.includes('届出外')){ setCheck('chg.chgEx'); return; }
+    let key='';
+    for(const k in KEY_LABELS){
+      if(ni.includes(norm(KEY_LABELS[k]))){ key=k; break; }
+    }
+    if(key) setCheck(key);
+    else others.push(item);
+  });
+  if(others.length>0) setCheck('other1', others[0]);
+  if(others.length>1) setCheck('other2', others[1]);
 }
 const ASSIST_DATA = {
   intake:{
