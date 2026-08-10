@@ -1286,8 +1286,8 @@ const CONTENT_CHECK_ITEMS = [
   { key:'other1', label:'その他（　　　　　　　　　　）', indent:true },
   { key:'other2', label:'その他（　　　　　　　　　　）' }
 ];
-// 申請内容欄の出力順（パネル表示順とは独立。変更（chg）関係→書類一覧→その他）
-const CONTENT_OUTPUT_ORDER = ['chg','chgAnnex','protocol','consent','comp','drug','disease','monitor','audit','doctor','coiA','coiE','plan','stat','other1','other2'];
+// 申請内容欄の出力順（パネル表示順とは独立。変更（chg）関係→書類一覧→その他→実施計画）
+const CONTENT_OUTPUT_ORDER = ['chg','chgAnnex','protocol','consent','comp','drug','disease','monitor','audit','doctor','coiA','coiE','stat','other1','other2','plan'];
 // チェック項目のHTMLを生成（状態は contentCheckState から復元）
 function contentCheckPanelHtml(rowIdx){
   const rows=CONTENT_CHECK_ITEMS.map(function(item){
