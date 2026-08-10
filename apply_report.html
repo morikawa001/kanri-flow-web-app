@@ -1271,21 +1271,23 @@ const CONTENT_CHECK_ITEMS = [
       { key:'chgEx', label:'届出外', ph:'', w:'sm' }
     ]},
   { key:'chgAnnex', label:'（変更内容は別紙のとおり）', indent:true },
-  { key:'protocol', label:'研究計画書', indent:true },
+  { key:'plan', label:'実施計画', indent:true },
+  { key:'protocol', label:'研究計画書' },
   { key:'consent', label:'説明同意文書', indent:true },
   { key:'comp', label:'補償の概要', indent:true },
-  { key:'drug', label:'医薬品等の概要を記載した書類', indent:true },
-  { key:'disease', label:'疾病等が発生した場合の対応に関する手順書', indent:true },
-  { key:'monitor', label:'モニタリングに関する手順書', indent:true },
-  { key:'audit', label:'監査に関する手順書', indent:true },
-  { key:'doctor', label:'研究分担医師リスト', indent:true },
-  { key:'coiA', label:'利益相反管理基準（様式Ａ）', indent:true },
-  { key:'coiE', label:'利益相反管理計画（様式Ｅ）', indent:true },
-  { key:'plan', label:'実施計画', indent:true },
-  { key:'stat', label:'統計解析計画書', indent:true },
-  { key:'other1', label:'その他（　　　　　　　　　　）', indent:true },
+  { key:'drug', label:'医薬品等の概要を記載した書類' },
+  { key:'disease', label:'疾病等が発生した場合の対応に関する手順書' },
+  { key:'monitor', label:'モニタリングに関する手順書' },
+  { key:'audit', label:'監査に関する手順書' },
+  { key:'coiA', label:'利益相反管理基準（様式Ａ）' },
+  { key:'coiE', label:'利益相反管理計画（様式Ｅ）' },
+  { key:'doctor', label:'研究分担医師リスト' },
+  { key:'stat', label:'統計解析計画書' },
+  { key:'other1', label:'その他（　　　　　　　　　　）' },
   { key:'other2', label:'その他（　　　　　　　　　　）' }
 ];
+// 申請内容欄の出力順（パネル表示順とは独立。変更（chg）関係→書類一覧→その他）
+const CONTENT_OUTPUT_ORDER = ['chg','chgAnnex','protocol','consent','comp','drug','disease','monitor','audit','doctor','coiA','coiE','plan','stat','other1','other2'];
 // チェック項目のHTMLを生成（状態は contentCheckState から復元）
 function contentCheckPanelHtml(rowIdx){
   const rows=CONTENT_CHECK_ITEMS.map(function(item){
@@ -1360,9 +1362,12 @@ function syncContentFromPanel(rowIdx){
   const prefix=rowIdx+':';
   const lines=[];
   function checkedFor(key){ return contentCheckState[prefix+key]&&contentCheckState[prefix+key].checked; }
-  CONTENT_CHECK_ITEMS.forEach(function(item){
+  const itemByKey={};
+  CONTENT_CHECK_ITEMS.forEach(function(it){ itemByKey[it.key]=it; });
+  CONTENT_OUTPUT_ORDER.forEach(function(key){
+    const item=itemByKey[key];
+    if(!item) return;
     if(!checkedFor(item.key)) return;
-    if(item.key==='new') return;
     if(item.key==='chg'){
       if(checkedFor('chg.chgDate')) lines.push('■変更（'+(contentCheckState[prefix+'chg.chgDate'].free||'')+'）');
       if(checkedFor('chg.chgMinor')) lines.push('■軽微（'+(contentCheckState[prefix+'chg.chgMinor'].free||'')+'）');
