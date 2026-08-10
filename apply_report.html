@@ -29,7 +29,7 @@ html[data-theme="dark"] body.page-apply{
   --bg:#0f1a26;--surface-3:#1d3a5c;--border:#33507a;--flow-guide:#122233;
 }
 /* 申請内容チェックパネル（apply専用） */
-.content-check-panel{border:1px solid var(--border);border-radius:var(--r-lg);padding:.7rem .8rem;margin:0 0 .7rem;background:var(--surface)}
+.content-check-panel{border:1px solid var(--border);border-radius:var(--r-lg);padding:.7rem .8rem;margin:.75rem 0 0;background:var(--surface)}
 .content-check-title{font-weight:700;font-size:.8rem;color:var(--primary);margin-bottom:.45rem}
 .content-check-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.2rem 0}
 .content-check-row.is-sub{padding-left:1.5rem}
@@ -1333,18 +1333,57 @@ function injectContentCheckPanels(){
     bindContentCheckEvents(panel);
   });
 }
-// チェックパネルの入力・チェックを contentCheckState に保存（再描画時も保持）
+// チェックパネルの入力・チェックを contentCheckState に保存し、変更内容欄（申請内容）へ反映
 function bindContentCheckEvents(panel){
+  function rowOf(el){
+    const key=el.dataset.cck||el.dataset.ccf||'';
+    return +(key.split(':')[0]||0);
+  }
   panel.querySelectorAll('[data-cck]').forEach(function(cb){
     cb.addEventListener('change',function(){
       contentCheckState[cb.dataset.cck]=Object.assign({},contentCheckState[cb.dataset.cck]||{}, {checked:cb.checked});
+      syncContentFromPanel(rowOf(cb));
     });
   });
   panel.querySelectorAll('[data-ccf]').forEach(function(inp){
     inp.addEventListener('input',function(){
       contentCheckState[inp.dataset.ccf]=Object.assign({},contentCheckState[inp.dataset.ccf]||{}, {free:inp.value});
+      syncContentFromPanel(rowOf(inp));
     });
   });
+}
+// チェックパネルのチェック済み項目を「■付き箇条書き」で変更内容欄（申請内容）へ書き出す（applyのみ）
+function syncContentFromPanel(rowIdx){
+  if(pageMode!=='apply') return;
+  const row=state.requestRows&&state.requestRows[rowIdx];
+  if(!row) return;
+  const prefix=rowIdx+':';
+  const lines=[];
+  function checkedFor(key){ return contentCheckState[prefix+key]&&contentCheckState[prefix+key].checked; }
+  CONTENT_CHECK_ITEMS.forEach(function(item){
+    if(!checkedFor(item.key)) return;
+    if(item.key==='new') return;
+    if(item.key==='chg'){
+      if(checkedFor('chg.chgDate')) lines.push('■変更（'+(contentCheckState[prefix+'chg.chgDate'].free||'')+'）');
+      if(checkedFor('chg.chgMinor')) lines.push('■軽微（'+(contentCheckState[prefix+'chg.chgMinor'].free||'')+'）');
+      if(checkedFor('chg.chgEx')) lines.push('■届出外（'+(contentCheckState[prefix+'chg.chgEx'].free||'')+'）');
+      return;
+    }
+    if(item.key==='other1'||item.key==='other2'){
+      lines.push('■その他（'+(contentCheckState[prefix+item.key].free||'')+'）');
+      return;
+    }
+    if(item.label.charAt(0)==='（'){
+      lines.push('■'+item.label);
+      return;
+    }
+    const st=contentCheckState[prefix+item.key];
+    lines.push('■'+item.label+(st.free?'（'+st.free+'）':''));
+  });
+  row.content=lines.join('\n');
+  const inp=document.querySelector('[data-r-content="'+rowIdx+'"]');
+  if(inp) inp.value=contentDisplayMask(row.content);
+  renderTemplate();
 }
 // 貼り付け自動入力で得た申請内容データをチェックパネルへ反映（applyのみ・行0に適用）
 function applyContentCheckFromData(data){
@@ -1571,6 +1610,7 @@ function resetAll(){
   state.loadedLedgerHeaders=[];
   state.selectedLedgerIndexes=[];
   state.requestRows=[{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}];
+  contentCheckState = {};
   state.managerPaths=[];
   state.stepEnterTimestamp=null;
   state.stepDurations={};
