@@ -2079,7 +2079,8 @@ function renderRequestRows(hostOverride) {
       '<textarea class="input" data-r-content="' + i + '" style="min-height:80px;resize:vertical" placeholder="申請内容を入力">' + h(r.content || '') + '</textarea>' +
       '</div>' +
       '<div class="field" style="margin-top:.7rem"><label>備考</label>' +
-      '<select class="select" data-r-notes-preset="' + i + '">' +
+      '<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">' +
+      '<select class="select" data-r-notes-preset="' + i + '" style="flex:0 0 200px">' +
       '<option value="">備考の定型文を選択</option>' +
       '<option value="all-sites" ' + (r.notesPreset === 'all-sites' ? 'selected' : '') + '>全施設分提供される場合</option>' +
       '<option value="scc-unchanged" ' + (r.notesPreset === 'scc-unchanged' ? 'selected' : '') + '>静がんの変更なしの場合</option>' +
@@ -2087,7 +2088,8 @@ function renderRequestRows(hostOverride) {
       '<option value="not-provided" ' + (r.notesPreset === 'not-provided' ? 'selected' : '') + '>提供されない場合</option>' +
       '<option value="free" ' + (r.notesPreset === 'free' ? 'selected' : '') + '>自由記載</option>' +
       '</select>' +
-      '<input class="input" data-r-notes="' + i + '" value="' + h(r.notes || '') + '" placeholder="備考を入力">' +
+      '<input class="input" data-r-notes="' + i + '" value="' + h(r.notes || '') + '" placeholder="備考を入力" style="flex:1 1 180px">' +
+      '</div>' +
       '</div>' : '') +
       '<div class="help">1行ごとに「報告区分」と「元の起案番号」を入力すると、生成後の起案番号が自動計算されます。</div>' +
       '</div>';
