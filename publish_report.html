@@ -782,7 +782,11 @@ jRCT URL：${h(r.url||'')}</div>
       <div class="help" style="margin-bottom:.5rem">件名と本文を編集できます。ZIP出力・各ステージのメール案に自動反映されます。</div>
       <div class="field"><label>件名</label><input class="input" id="mailSubjectEdit" value="${h(draft.subject)}"></div>
       <div class="field" style="margin-top:.5rem"><label>本文</label><textarea class="textarea" id="mailBodyEdit" style="min-height:180px">${h(draft.body)}</textarea></div>
-      <div class="help" style="margin-top:.4rem">変更は自動保存されます。</div>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.6rem">
+        <button class="primary-btn" id="mailDraftCreateBtn" type="button">作成</button>
+        <span class="help" id="mailDraftStatus"></span>
+      </div>
+      <div class="help" style="margin-top:.4rem">「作成」を押すと、現在のデータからメール案を自動生成します（CSVから復元した内容も上書きされます）。編集した内容は自動保存されます。</div>
     </div>
 
     <div class="template-card" style="text-align:center">
@@ -811,6 +815,16 @@ jRCT URL：${h(r.url||'')}</div>
   });
   document.getElementById('downloadCsvBtn')?.addEventListener('click', downloadCsvFromRequests);
   document.getElementById('downloadZipBtn')?.addEventListener('click', downloadFolderZip);
+  document.getElementById('mailDraftCreateBtn')?.addEventListener('click',()=>{
+    resetMailEdits();
+    const draft=emailDraft();
+    const subj=document.getElementById('mailSubjectEdit');
+    const body=document.getElementById('mailBodyEdit');
+    if(subj) subj.value=draft.subject;
+    if(body) body.value=draft.body;
+    const st=document.getElementById('mailDraftStatus');
+    if(st){st.textContent='✅ 現在のデータからメール案を作成しました。';st.style.color='var(--success)';}
+  });
   bindMailEditorEvents('mailSubjectEdit', 'mailBodyEdit', 'pathMailStatus');
   bindDraftsExtraEvents();
   wrap.querySelectorAll('[data-check]').forEach(el=>{
