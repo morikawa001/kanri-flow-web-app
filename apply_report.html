@@ -1653,6 +1653,17 @@ function renderAll(){
   updateNavBtn();
   renderAssistPopup();
 }
+// メール本文の「（jRCT 申請日未入力）」を「（申請内容）」に置換（apply専用・common-flow.jsの関数を上書き）
+(function(){
+  var origAutoEmailDraft = window.autoEmailDraft;
+  window.autoEmailDraft = function(){
+    var d = origAutoEmailDraft();
+    if(pageMode==='apply' && d && d.body){
+      d.body = d.body.split('（jRCT 申請日未入力）').join('（申請内容）');
+    }
+    return d;
+  };
+})();
 function resetAll(){
   current=stages.findIndex(s=>s.id==='intake');
   done=Array(stages.length).fill(false);
