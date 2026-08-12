@@ -1666,10 +1666,11 @@ function renderAll(){
       if(d.body.indexOf(ph)!==-1){
         var paths=state.managerPaths||[];
         var k=0;
-        while(d.body.indexOf(ph)!==-1 && k<paths.length){
-          d.body=d.body.replace(ph, paths[k]||ph);
+        d.body=d.body.replace(/（決裁後に確定する管理者側フォルダパス）/g, function(){
+          var v=(k<paths.length&&paths[k])?paths[k]:ph;
           k++;
-        }
+          return v;
+        });
       }
     }
     return d;
