@@ -243,7 +243,9 @@ const state = {
   assistSeen:{},
   stepEnterTimestamp:null,
   stepDurations:{},
-  lastRenderedStageId:null
+  lastRenderedStageId:null,
+  attachmentData:[],
+  attachmentInputRaw:''
 };
 let folderSelections = {};
 
@@ -492,6 +494,15 @@ ${stage.id==='intake'
 </div>
 </div>
 <div class="template-card" style="margin-bottom:.75rem">
+<div class="field" style="margin-bottom:.5rem"><label>審査依頼書_添付資料</label>
+<input type="text" class="input" data-bind="attachmentInputRaw" id="attachmentInput" value="${h(state.attachmentInputRaw||'')}" placeholder="例：実施計画、研究計画書、説明同意文書（カンマ・コロン・スペース等で区切って入力）"></div>
+<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+<button type="button" class="primary-btn" id="attachmentReflectBtn">反映</button>
+<span class="help" id="attachmentStatus"></span>
+</div>
+<div class="help" style="margin-top:.4rem">反映すると、確認項目パネルの「添付資料」チェックボックスとステップ4の確認項目に表示されます。</div>
+</div>
+<div class="template-card" style="margin-bottom:.75rem">
 <div class="help" style="margin-bottom:.6rem">以前保存した台帳CSV・Excelを読み込むと、研究課題名・研究責任者・研究区分・研究略称・依頼行などを自動復元し、続きから再開できます。</div>
 <div id="csvDropZoneStep1" class="csv-dropzone" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
 <label class="ghost-btn" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">台帳CSV・Excelを読み込む<input type="file" id="csvInputStep1" accept=".csv,.xlsx,.xls" style="display:none" multiple></label>
@@ -558,6 +569,22 @@ ${generatedHTML}
   }
 
   if(stage.id==='intake'){
+    document.getElementById('attachmentReflectBtn')?.addEventListener('click',()=>{
+      const input=document.getElementById('attachmentInput');
+      const raw=(input?.value||'').trim();
+      const s=document.getElementById('attachmentStatus');
+      if(!raw){
+        if(s){s.textContent='添付資料名を入力してください。';s.style.color='var(--warn)';}
+        return;
+      }
+      state.attachmentInputRaw=raw;
+      state.attachmentData=raw.split(/[,、，:：;；\s\u3000]+/).map(x=>x.trim()).filter(Boolean);
+      if(s){s.textContent='✅ 添付資料 '+state.attachmentData.length+' 件を反映しました。';s.style.color='var(--success)';}
+      renderTemplate();
+    });
+  }
+
+  if(stage.id==='intake'){
     document.getElementById('csvInputStep1')?.addEventListener('change',handleCsvLoadFromFile);
     setupDropZone('csvDropZoneStep1','csvInputStep1');
   }
@@ -598,6 +625,12 @@ function renderTemplate(){
   if(mainEl) mainEl.style.gridTemplateColumns='';
 
   function checklistHtml(){
+    const attachRow=(stage.id==='intake'||stage.id==='files')
+      ? `<label class="checkitem ${checks[`${stage.id}_attachments`]?'checked':''}">
+<input type="checkbox" data-check="${stage.id}_attachments" ${checks[`${stage.id}_attachments`]?'checked':''}>
+<div><strong>添付資料</strong><span>${h(attachmentSummary())}</span></div>
+</label>`
+      : '';
     return `<div class="section-title">確認項目</div>
 <div class="checklist">
 ${stage.checks.map((c,idx)=>`
@@ -605,7 +638,14 @@ ${stage.checks.map((c,idx)=>`
 <input type="checkbox" data-check="${stage.id}_${idx}" ${checks[`${stage.id}_${idx}`]?'checked':''}>
 <div><strong>${h(c[0])}</strong><span>${h(c[1])}</span></div>
 </label>`).join('')}
+${attachRow}
 </div>`;
+  }
+  // 添付資料_データを確認項目パネルへ表示用にまとめる
+  function attachmentSummary(){
+    const data=state.attachmentData||[];
+    if(!data.length) return '（未入力）';
+    return data.join('、');
   }
   function ctaHtml(){
     const vis=visibleStages();
@@ -1621,10 +1661,11 @@ function resetAll(){
   state.requestRows=[{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}];
   contentCheckState = {};
   state.managerPaths=[];
+  state.attachmentData=[];
   state.stepEnterTimestamp=null;
   state.stepDurations={};
   state.lastRenderedStageId=null;
-  ['mailSubject','studyTitle','jrctNo','managerAffil1','managerDept1','managerTitle1','managerName1','managerAffil2','managerDept2','managerTitle2','managerName2','drafterName','drafterDept','sendDate','studyTypeSpecific','studyTypeUnapproved','studyTypeFunding','studyTypeNonspecific'].forEach(k=>{delete state[k];});
+  ['mailSubject','studyTitle','jrctNo','managerAffil1','managerDept1','managerTitle1','managerName1','managerAffil2','managerDept2','managerTitle2','managerName2','drafterName','drafterDept','sendDate','studyTypeSpecific','studyTypeUnapproved','studyTypeFunding','studyTypeNonspecific','attachmentInputRaw'].forEach(k=>{delete state[k];});
   state.draftDate=todayFormatted();
   fileStatuses={};
   state.assistSeen={};
