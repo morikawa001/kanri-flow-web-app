@@ -42,6 +42,8 @@ html[data-theme="dark"] body.page-apply{
 .content-check-inline{width:120px;font-size:.75rem;padding:.22rem .45rem}
 .content-check-inline.w-sm{width:70px}
 .content-check-paren{color:var(--muted);font-size:.78rem;display:inline-flex;align-items:center;gap:.15rem}
+.checkitem.is-sub{padding-left:1.7rem;margin-left:.5rem;background:transparent;border-color:transparent}
+.checkitem.is-sub.checked{background:var(--success-soft);border-color:var(--success)}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -579,6 +581,7 @@ ${generatedHTML}
       }
       state.attachmentInputRaw=raw;
       state.attachmentData=raw.split(/[,、，:：;；\s\u3000]+/).map(x=>x.trim()).filter(Boolean);
+      Object.keys(checks).forEach(k=>{if(/^(intake|files)_attachment/.test(k)) checks[k]=false;});
       if(s){s.textContent='✅ 添付資料 '+state.attachmentData.length+' 件を反映しました。';s.style.color='var(--success)';}
       renderTemplate();
     });
@@ -625,11 +628,17 @@ function renderTemplate(){
   if(mainEl) mainEl.style.gridTemplateColumns='';
 
   function checklistHtml(){
+    const attachData=(state.attachmentData||[]).filter(Boolean);
     const attachRow=(stage.id==='intake'||stage.id==='files')
       ? `<label class="checkitem ${checks[`${stage.id}_attachments`]?'checked':''}">
 <input type="checkbox" data-check="${stage.id}_attachments" ${checks[`${stage.id}_attachments`]?'checked':''}>
-<div><strong>添付資料</strong><span>${h(attachmentSummary())}</span></div>
-</label>`
+<div><strong>添付資料</strong><span>${attachData.length?attachData.length+'件':'（未入力）'}</span></div>
+</label>
+${attachData.map((name,i)=>`
+<label class="checkitem is-sub ${checks[`${stage.id}_attachment_${i}`]?'checked':''}">
+<input type="checkbox" data-check="${stage.id}_attachment_${i}" ${checks[`${stage.id}_attachment_${i}`]?'checked':''}>
+<div><strong>${h(name)}</strong><span></span></div>
+</label>`).join('')}`
       : '';
     return `<div class="section-title">確認項目</div>
 <div class="checklist">
@@ -640,12 +649,6 @@ ${stage.checks.map((c,idx)=>`
 </label>`).join('')}
 ${attachRow}
 </div>`;
-  }
-  // 添付資料_データを確認項目パネルへ表示用にまとめる
-  function attachmentSummary(){
-    const data=state.attachmentData||[];
-    if(!data.length) return '（未入力）';
-    return data.join('、');
   }
   function ctaHtml(){
     const vis=visibleStages();
