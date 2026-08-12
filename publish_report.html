@@ -1218,13 +1218,26 @@ function renderAll(){
   updateNavBtn();
   renderAssistPopup();
 }
-// メール本文の「（決裁後に確定する管理者側フォルダパス）」には現在のパスを自動反映する
+// メール本文の「（jRCT 公表日未入力）」には台帳の公表日データを差し込む
+// 「（決裁後に確定する管理者側フォルダパス）」には現在のパスを自動反映する
 // 自動生成時だけでなくCSV復元後の古い本文でも置換するため emailDraft をラップする
 (function(){
   var origEmailDraft = window.emailDraft;
   window.emailDraft = function(){
     var d = origEmailDraft();
     if(d && d.body){
+      // CSV復元後の古い本文では公表日プレースホルダが残るため、台帳の公表日データを差し込む
+      // （自動生成時は autoEmailDraft が既に公表日を差し込んでいるため mailTouched 時のみ）
+      var datePh='（jRCT 公表日未入力）';
+      if(state.mailTouched && d.body.indexOf(datePh)!==-1){
+        var rows=requestRowsData();
+        var j=0;
+        d.body=d.body.replace(/（jRCT 公表日未入力）/g, function(){
+          var date=(j<rows.length)?formatDateToJapanese(rows[j].date):'';
+          j++;
+          return date || datePh;
+        });
+      }
       var ph='（決裁後に確定する管理者側フォルダパス）';
       if(d.body.indexOf(ph)!==-1){
         var paths=state.managerPaths||[];
