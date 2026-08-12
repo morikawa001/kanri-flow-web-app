@@ -1340,7 +1340,7 @@ function contentCheckPanelHtml(rowIdx){
   const rows=CONTENT_CHECK_ITEMS.map(function(item){
     const key=rowIdx+':'+item.key;
     const st=contentCheckState[key]||{checked:false,free:''};
-    const freeField='<input type="text" class="input content-check-free" data-ccf="'+key+'" value="'+h(st.free)+'" placeholder="自由記載">';
+    const freeField='<input type="text" class="input content-check-free" data-ccf="'+key+'" value="'+h(st.free)+'" placeholder="自由記載・変更理由等">';
     if(item.subs){
       const subsHtml=item.subs.map(function(sub){
         const skey=key+'.'+sub.key;
