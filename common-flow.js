@@ -119,7 +119,9 @@ return {
     approval: r['承認日'] || '',
     url: r['jRCT URL'] || '',
     facilityType: r['自施設他施設'] || '',
-    facilityDetail: r['報告詳細'] || ''
+    facilityDetail: r['報告詳細'] || '',
+    content: r['申請内容'] || '',
+    notes: r['備考'] || ''
   };
 }
 

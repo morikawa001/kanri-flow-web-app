@@ -53,12 +53,43 @@ function csvEscape(v) {
   return '"' + String(v ?? '').replace(/"/g, '""') + '"';
 }
 
+// 申請内容チェックパネルの状態をCSV保存用のJSON文字列へ（apply専用）
+function contentCheckToCsv(rowIdx) {
+  if (pageMode !== 'apply' || typeof contentCheckState === 'undefined') return '';
+  var prefix = rowIdx + ':';
+  var out = {};
+  Object.keys(contentCheckState).forEach(function(k) {
+    if (k.indexOf(prefix) !== 0) return;
+    out[k.slice(prefix.length)] = (contentCheckState[k] || {});
+  });
+  return Object.keys(out).length ? JSON.stringify(out) : '';
+}
+
+// CSVの「申請内容チェック」列からチェックパネル状態を復元（apply専用）
+function contentCheckFromCsv(text, rowIdx) {
+  if (pageMode !== 'apply' || typeof contentCheckState === 'undefined') return;
+  var prefix = rowIdx + ':';
+  Object.keys(contentCheckState).forEach(function(k) { if (k.indexOf(prefix) === 0) delete contentCheckState[k]; });
+  if (!text) return;
+  try {
+    var obj = JSON.parse(String(text));
+    if (!obj || typeof obj !== 'object') return;
+    Object.keys(obj).forEach(function(k) {
+      var st = obj[k];
+      if (st && typeof st === 'object' && 'checked' in st) {
+        contentCheckState[prefix + k] = { checked: !!st.checked, free: st.free || '' };
+      }
+    });
+  } catch(e) {}
+}
+
 // CSVを生成（依頼行から）
 function csvFromRequests() {
   var rows = requestRowsData();
   var isApply = pageMode === 'apply';
   var header = ['起案日','元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
   if (isApply) header.splice(header.indexOf('公表日') + 1, 0, '承認日');
+  if (isApply) header.push('申請内容','備考','申請内容チェック');
   var mailDraft = getMailDraftRecord();
   var drafter = getValue('drafterName') || '';
   var studyTitle = getValue('studyTitle') || '';
@@ -94,6 +125,7 @@ function csvFromRequests() {
       state.stepDurations['intake'] || 0, state.stepDurations['folders'] || 0, state.stepDurations['drafts'] || 0,
       state.stepDurations['files'] || 0, state.stepDurations['work'] || 0, state.stepDurations['path'] || 0, state.stepDurations['send'] || 0,
       mailDraft.subject, mailDraft.body);
+    if (pageMode === 'apply') rowArr.push(r.content || '', r.notes || '', contentCheckToCsv(idx));
     return rowArr.map(csvEscape).join(',');
   }).join('\n');
   return header.map(csvEscape).join(',') + '\n' + body;
@@ -211,8 +243,14 @@ function handleCsvLoadFromFile(ev) {
           approval: r['承認日'] || '',
           url: r['jRCT URL'] || '',
           facilityType: r['自施設他施設'] || '',
-          facilityDetail: r['報告詳細'] || ''
+          facilityDetail: r['報告詳細'] || '',
+          content: r['申請内容'] || '',
+          notes: r['備考'] || ''
         };
+      });
+      // 申請内容チェックパネルの状態をCSVから復元（apply専用）
+      parsed.rows.forEach(function(r, i) {
+        if (r['申請内容チェック']) contentCheckFromCsv(r['申請内容チェック'], i);
       });
       var first = parsed.rows[0];
       if (first['研究課題名']) state.studyTitle = first['研究課題名'];
@@ -351,6 +389,11 @@ function ledgerCsvForDownload() {
   if (!headers.includes('step7(秒)')) headers.push('step7(秒)');
   if (!headers.includes('メール件名')) headers.push('メール件名');
   if (!headers.includes('メール本文')) headers.push('メール本文');
+  if (pageMode === 'apply') {
+    if (!headers.includes('申請内容')) headers.push('申請内容');
+    if (!headers.includes('備考')) headers.push('備考');
+    if (!headers.includes('申請内容チェック')) headers.push('申請内容チェック');
+  }
 
   var sendDate = getValue('sendDate') || '';
   var draftDate = state.draftDate || todayFormatted();
@@ -433,10 +476,16 @@ function ledgerCsvForDownload() {
     obj['step5(秒)'] = state.stepDurations['work'] || 0;
     obj['step6(秒)'] = state.stepDurations['path'] || 0;
     obj['step7(秒)'] = state.stepDurations['send'] || 0;
-    if (!obj['自施設他施設']) obj['自施設他施設'] = requestRowsData()[idx]?.facilityType || '';
-    if (!obj['報告詳細']) obj['報告詳細'] = requestRowsData()[idx]?.facilityDetail || '';
+    var curRow = requestRowsData()[idx] || {};
+    if (!obj['自施設他施設']) obj['自施設他施設'] = curRow.facilityType || '';
+    if (!obj['報告詳細']) obj['報告詳細'] = curRow.facilityDetail || '';
     obj['メール件名'] = mailDraft.subject;
     obj['メール本文'] = mailDraft.body;
+    if (pageMode === 'apply') {
+      obj['申請内容'] = curRow.content || '';
+      obj['備考'] = curRow.notes || '';
+      obj['申請内容チェック'] = contentCheckToCsv(idx);
+    }
     return obj;
   });
   var body = rows.map(function(r) {
