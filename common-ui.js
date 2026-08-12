@@ -330,6 +330,10 @@ function namingRulesForRow(r) {
 
   var html = items.map(function(it, idx) {
     var parts = it.pattern.slice();
+    // applyでは「公表」を「変更」表記にする（publishは従来どおり）
+    if (pageMode === 'apply') {
+      parts = parts.map(function(p) { return p === '公表' ? '変更' : p; });
+    }
     if (parts.length >= 3) {
       parts[2] = seqLabel(parts[2]);
     }
