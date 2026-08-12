@@ -1218,6 +1218,26 @@ function renderAll(){
   updateNavBtn();
   renderAssistPopup();
 }
+// メール本文の「（決裁後に確定する管理者側フォルダパス）」には現在のパスを自動反映する
+// 自動生成時だけでなくCSV復元後の古い本文でも置換するため emailDraft をラップする
+(function(){
+  var origEmailDraft = window.emailDraft;
+  window.emailDraft = function(){
+    var d = origEmailDraft();
+    if(d && d.body){
+      var ph='（決裁後に確定する管理者側フォルダパス）';
+      if(d.body.indexOf(ph)!==-1){
+        var paths=state.managerPaths||[];
+        var k=0;
+        while(d.body.indexOf(ph)!==-1 && k<paths.length){
+          d.body=d.body.replace(ph, paths[k]||ph);
+          k++;
+        }
+      }
+    }
+    return d;
+  };
+})();
 function resetAll(){
   current=stages.findIndex(s=>s.id==='intake');
   done=Array(stages.length).fill(false);

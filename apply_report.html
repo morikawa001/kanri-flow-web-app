@@ -1654,6 +1654,7 @@ function renderAll(){
   renderAssistPopup();
 }
 // メール本文の「（jRCT 申請日未入力）」を「（申請内容）」に置換（apply専用・common-flow.jsの関数を上書き）
+// 「（決裁後に確定する管理者側フォルダパス）」には現在のパスを自動反映する
 // 自動生成時だけでなくCSV復元後の古い本文でも置換するため emailDraft をラップする
 (function(){
   var origEmailDraft = window.emailDraft;
@@ -1661,6 +1662,15 @@ function renderAll(){
     var d = origEmailDraft();
     if(pageMode==='apply' && d && d.body){
       d.body = d.body.split('（jRCT 申請日未入力）').join('（申請内容）');
+      var ph='（決裁後に確定する管理者側フォルダパス）';
+      if(d.body.indexOf(ph)!==-1){
+        var paths=state.managerPaths||[];
+        var k=0;
+        while(d.body.indexOf(ph)!==-1 && k<paths.length){
+          d.body=d.body.replace(ph, paths[k]||ph);
+          k++;
+        }
+      }
     }
     return d;
   };
