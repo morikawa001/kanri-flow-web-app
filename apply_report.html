@@ -95,13 +95,13 @@ html[data-theme="dark"] body.page-apply{
 </div>
 <script>var pageMode = 'apply';</script>
 <script src="common.js?v=20260811"></script>
-<script src="common-flow.js?v=20260812"></script>
+<script src="common-flow.js?v=20260815"></script>
 <script src="common-csv.js?v=9e41261"></script>
 <script src="common-docx.js?v=20260811"></script>
-<script src="common-ui.js?v=20260814"></script>
+<script src="common-ui.js?v=20260815"></script>
 <script src="state.js?v=20260814"></script>
 <script src="utils.js?v=20260811"></script>
-<script src="dates.js?v=20260811"></script>
+<script src="dates.js?v=20260815"></script>
 <script src="identifiers.js?v=20260811"></script>
 <script>
 const stages = [
@@ -1039,7 +1039,7 @@ jRCT URL：${h(r.url||'')}</div>
     <div class="card-bd template-block">
       <div class="template-card">
         <h4>送信情報</h4>
-        <div class="field"><label>申請管理者報告メール送信日</label><input class="input" data-bind="sendDate" id="sendDate" value="${h(state.sendDate||'')}" placeholder="例：2026/07/05"></div>
+        <div class="field"><label>申請管理者報告メール送信日</label><input class="input" data-bind="sendDate" id="sendDate" value="${h(state.sendDate||'')}" placeholder="例：2026/7/5"></div>
       </div>
       <div style="margin-top:.75rem">${checklistHtml()}</div>
       <div class="template-card" style="margin-top:.75rem">

@@ -26,14 +26,14 @@ App.dates = (function() {
     return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
   }
 
-  // 日付をYYYY/MM/DD形式に正規化
+  // 日付をYYYY/M/D形式に正規化（月日は先頭ゼロなし）
   function normalizeToYmdSlash(v) {
     var s = String(v || '').trim();
     if (!s) return '';
     var m = s.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
-    if (m) return m[1] + '/' + m[2].padStart(2, '0') + '/' + m[3].padStart(2, '0');
+    if (m) return m[1] + '/' + parseInt(m[2], 10) + '/' + parseInt(m[3], 10);
     var m2 = s.match(/^(\d{4})(\d{2})(\d{2})$/);
-    if (m2) return m2[1] + '/' + m2[2] + '/' + m2[3];
+    if (m2) return m2[1] + '/' + parseInt(m2[2], 10) + '/' + parseInt(m2[3], 10);
     return s;
   }
 

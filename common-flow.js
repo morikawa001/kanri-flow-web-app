@@ -205,24 +205,24 @@ function todayFormatted() {
   return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
 }
 
-// 日付をYYYY/MM/DD形式に正規化
+// 日付をYYYY/M/D形式に正規化（月日は先頭ゼロなし）
 function normalizeToYmdSlash(v) {
   var s = String(v || '').trim();
   if (!s) return '';
   var m = s.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
-  if (m) return m[1] + '/' + m[2].padStart(2, '0') + '/' + m[3].padStart(2, '0');
+  if (m) return m[1] + '/' + parseInt(m[2], 10) + '/' + parseInt(m[3], 10);
   var m2 = s.match(/^(\d{4})(\d{2})(\d{2})$/);
-  if (m2) return m2[1] + '/' + m2[2] + '/' + m2[3];
+  if (m2) return m2[1] + '/' + parseInt(m2[2], 10) + '/' + parseInt(m2[3], 10);
   return s;
 }
 
-// 日付をYYYY年MM月DD日形式に変換
+// 日付をYYYY年M月D日形式に変換（月日は先頭ゼロなし）
 function formatDateToJapanese(v) {
   var s = String(v || '').trim();
   if (!s) return '';
   var m = s.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
   if (!m) return s;
-  return m[1] + '年' + m[2].padStart(2, '0') + '月' + m[3].padStart(2, '0') + '日';
+  return m[1] + '年' + parseInt(m[2], 10) + '月' + parseInt(m[3], 10) + '日';
 }
 
 // 日付範囲（～区切り）を日本語形式に変換
@@ -236,7 +236,7 @@ function formatDateRangeToJapanese(v) {
   return formatDateToJapanese(s);
 }
 
-// 日付範囲をスラッシュ形式に正規化
+// 日付範囲をスラッシュ形式に正規化（月日は先頭ゼロなし）
 function formatDateRangeToSlash(v) {
   var s = String(v || '').trim();
   if (!s) return '';
@@ -244,29 +244,29 @@ function formatDateRangeToSlash(v) {
   if (parts.length >= 2) {
     return parts.map(function(p) {
       var m = p.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
-      return m ? m[1] + '/' + m[2].padStart(2, '0') + '/' + m[3].padStart(2, '0') : p;
+      return m ? m[1] + '/' + parseInt(m[2], 10) + '/' + parseInt(m[3], 10) : p;
     }).join('～');
   }
   var m = s.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
-  return m ? m[1] + '/' + m[2].padStart(2, '0') + '/' + m[3].padStart(2, '0') : s;
+  return m ? m[1] + '/' + parseInt(m[2], 10) + '/' + parseInt(m[3], 10) : s;
 }
 
-// DOCX用の年月日部分を取得
+// DOCX用の年月日部分を取得（月日は先頭ゼロなし）
 function currentDocxDateParts() {
   var src = state.draftDate || todayFormatted();
   var m = String(src).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
   if (m) {
     return {
       year: m[1],
-      month: m[2].padStart(2, '0'),
-      day: m[3].padStart(2, '0')
+      month: String(parseInt(m[2], 10)),
+      day: String(parseInt(m[3], 10))
     };
   }
   var now = new Date();
   return {
     year: String(now.getFullYear()),
-    month: String(now.getMonth() + 1).padStart(2, '0'),
-    day: String(now.getDate()).padStart(2, '0')
+    month: String(now.getMonth() + 1),
+    day: String(now.getDate())
   };
 }
 // ============================================================

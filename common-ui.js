@@ -92,10 +92,10 @@ function renderRequestRows(hostOverride) {
     var isPeriodic = r.type === '定期報告';
     var isApply = pageMode === 'apply';
     var dateLabel = isPeriodic ? '報告期間' : '公表日';
-    var datePlaceholder = isPeriodic ? '例：2026/4/5～2026/9/30' : '例：2026/07/05';
+    var datePlaceholder = isPeriodic ? '例：2026/4/5～2026/9/30' : '例：2026/7/5';
     var dateField = isApply
       ? '<div class="field"><label>承認日</label>' +
-        '<input class="input" data-r-approval="' + i + '" value="' + h(formatDateToJapanese(r.approval||'')) + '" placeholder="例：2026年07月05日">' +
+        '<input class="input" data-r-approval="' + i + '" value="' + h(formatDateToJapanese(r.approval||'')) + '" placeholder="例：2026年7月5日">' +
         '</div>'
       : '<div class="field"><label>' + dateLabel + '</label>' +
         '<input class="input" data-r-date="' + i + '" value="' + h(r.date || '') + '" placeholder="' + datePlaceholder + '"' + (isPeriodic ? ' pattern="\\d{4}/\\d{1,2}/\\d{1,2}～\\d{4}/\\d{1,2}/\\d{1,2}" title="形式：yyyy/m/d～yyyy/m/d"' : '') + '>' +
