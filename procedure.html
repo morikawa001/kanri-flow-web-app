@@ -450,22 +450,56 @@ processCsvFiles(csvFiles);
 function parseCSV(text){
 // BOMを除去
 text=text.replace(/^\uFEFF/,'');
-// タブ区切りの検出
-var lines=text.split(/\r?\n/);
-var result=[];
-lines.forEach(function(line){
-if(line.trim()){
-// タブ区切りを優先、なければカンマ区切り
-var row;
-if(line.indexOf('\t')!==-1){
-row=line.split('\t').map(function(c){return c.trim();});
+// 区切り文字を判定（1行目にタブが含まれる場合はタブ区切り）
+var firstLineEnd=text.indexOf('\n');
+var firstLine=text.substring(0,firstLineEnd===-1?text.length:firstLineEnd);
+var delim=(firstLine.indexOf('\t')!==-1)?'\t':',';
+
+var rows=[],row=[],field='';
+var inQuotes=false,wasQuoted=false;
+var i=0,n=text.length;
+while(i<n){
+var c=text.charAt(i);
+if(inQuotes){
+if(c==='"'){
+if(text.charAt(i+1)==='"'&&i+1<n){
+field+='"';
+i+=2;
 }else{
-row=line.split(',').map(function(c){return c.trim();});
+inQuotes=false;
+i++;
 }
-result.push(row);
+}else{
+field+=c;
+i++;
 }
-});
-return result;
+}else{
+if(c==='"'&&field===''){
+inQuotes=true;
+wasQuoted=true;
+i++;
+}else if(c===delim){
+row.push(wasQuoted?field:field.trim());
+field='';wasQuoted=false;
+i++;
+}else if(c==='\r'||c==='\n'){
+if(c==='\r'&&text.charAt(i+1)==='\n')i++;
+i++;
+row.push(wasQuoted?field:field.trim());
+field='';wasQuoted=false;
+if(row.length>1||row[0]!=='')rows.push(row);
+row=[];
+}else{
+field+=c;
+i++;
+}
+}
+}
+if(field!==''||row.length>0){
+row.push(wasQuoted?field:field.trim());
+if(row.length>1||row[0]!=='')rows.push(row);
+}
+return rows;
 }
 
 function findHeaderIndex(headers,name){
