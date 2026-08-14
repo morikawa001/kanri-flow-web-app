@@ -96,7 +96,7 @@ html[data-theme="dark"] body.page-apply{
 <script src="common-flow.js?v=20260812"></script>
 <script src="common-csv.js?v=20260814"></script>
 <script src="common-docx.js?v=20260811"></script>
-<script src="common-ui.js?v=20260812"></script>
+<script src="common-ui.js?v=20260814"></script>
 <script src="state.js?v=20260811"></script>
 <script src="utils.js?v=20260811"></script>
 <script src="dates.js?v=20260811"></script>
@@ -1434,7 +1434,9 @@ function syncContentFromPanel(rowIdx){
       return;
     }
     const st=contentCheckState[prefix+item.key];
-    lines.push(item.label+(st.free?'（'+st.free+'）':''));
+    // 改訂表記で出力する項目（研究計画書・説明同意文書）
+    const REVISION_LABELS={protocol:'研究計画書の改訂', consent:'説明同意文書の改訂'};
+    lines.push((REVISION_LABELS[item.key]||item.label)+(st.free?'（'+st.free+'）':''));
   });
   row.content=lines.join('、');
   const inp=document.querySelector('[data-r-content="'+rowIdx+'"]');

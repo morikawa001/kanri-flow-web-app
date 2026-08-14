@@ -133,6 +133,7 @@ function renderRequestRows(hostOverride) {
       urlField +
       (pageMode === 'apply' ? '<div class="field" style="margin-top:.7rem"><label>申請内容</label>' +
       '<textarea class="input" data-r-content="' + i + '" style="min-height:80px;resize:vertical" placeholder="申請内容を入力">' + h(r.content || '') + '</textarea>' +
+      '<div class="help">起案の申請内容欄に記載する内容に修正してください。</div>' +
       '</div>' +
       '<div class="field" style="margin-top:.7rem"><label>備考</label>' +
       '<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">' +
