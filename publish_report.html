@@ -225,7 +225,8 @@ const state = {
   assistSeen:{},
   stepEnterTimestamp:null,
   stepDurations:{},
-  lastRenderedStageId:null
+  lastRenderedStageId:null,
+  pendingLedgerFromSession:false
 };
 let folderSelections = {};
 
@@ -465,11 +466,36 @@ ${(()=>{
 <div class="card-bd">
 ${notesHtml?`<div class="note-list" style="margin-bottom:.75rem">${notesHtml}</div>`:''}
 ${stage.id==='intake'
-  ? `<div class="template-card" style="margin-bottom:.75rem">
+  ? `${state.pendingLedgerFromSession
+      ? `<div class="template-card" style="margin-bottom:.75rem">
+<div class="help" style="margin-bottom:.6rem">手続き選択ページで読み込んだ進捗管理CSVのデータが見つかりました。引き継ぐ行を選択してください。</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.65rem">
+<strong style="font-size:.82rem">対象行：${h(ledgerSelectionSummary())}</strong>
+<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+<button type="button" class="ghost-btn" id="sessionSelectAllBtn">すべて選択</button>
+<button type="button" class="ghost-btn" id="sessionClearBtn">すべて解除</button>
+<button type="button" class="primary-btn" id="sessionApplyBtn">選択した行で復元</button>
+</div>
+</div>
+<div>${(state.loadedLedgerRows||[]).map((r,i)=>{
+  const checked=(state.selectedLedgerIndexes||[]).includes(i);
+  return `<label class="row-pick ${checked?'selected':''}">
+<input type="checkbox" data-session-ledger-row="${i}" ${checked?'checked':''}>
+<div class="row-pick-main">
+<strong>行${i+1}：${h(r['起案番号']||r['研究課題名']||'')}</strong>
+<span>報告区分：${h(r['報告区分']||'')}</span>
+<span>ステータス：${h(r['ステータス']||'')}</span>
+<span>公表日：${h(r['公表日']||'')}</span>
+</div>
+</label>`;
+  }).join('')}</div>
+</div>`
+      : ''}
+<div class="template-card" style="margin-bottom:.75rem">
 <div class="help" style="margin-bottom:.6rem">以前保存した台帳CSV・Excelを読み込むと、研究課題名・研究責任者・研究区分・研究略称・依頼行などを自動復元し、続きから再開できます。</div>
 <div id="csvDropZoneStep1" class="csv-dropzone" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
 <label class="ghost-btn" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">台帳CSV・Excelを読み込む<input type="file" id="csvInputStep1" accept=".csv,.xlsx,.xls" style="display:none" multiple></label>
-<span class="help" id="csvStatusStep1"></span>
+<span class="help" id="csvStatusStep1">${fileStatuses.csv || ''}</span>
 </div>
 <div class="help" style="margin-top:.4rem">または、台帳CSV・Excelファイルをこの枠内へドラッグ＆ドロップでも読み込めます。</div>
 </div>
@@ -541,6 +567,15 @@ ${generatedHTML}
   if(stage.id==='intake'){
     document.getElementById('csvInputStep1')?.addEventListener('change',handleCsvLoadFromFile);
     setupDropZone('csvDropZoneStep1','csvInputStep1');
+    document.querySelectorAll('[data-session-ledger-row]').forEach(el=>{
+      el.addEventListener('change',()=>{
+        toggleSessionLedgerSelection(+el.dataset.sessionLedgerRow, el.checked);
+        renderAll();
+      });
+    });
+    document.getElementById('sessionSelectAllBtn')?.addEventListener('click',()=>{selectAllSessionLedgerRows();renderAll();});
+    document.getElementById('sessionClearBtn')?.addEventListener('click',()=>{clearSessionLedgerRows();renderAll();});
+    document.getElementById('sessionApplyBtn')?.addEventListener('click',()=>{applySelectedSessionLedger();renderAll();});
   }
 
   if(stage.id==='drafts'){
@@ -1316,6 +1351,7 @@ function resetAll(){
   state.loadedLedgerRows=[];
   state.loadedLedgerHeaders=[];
   state.selectedLedgerIndexes=[];
+  state.pendingLedgerFromSession=false;
   state.requestRows=[{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}];
   state.managerPaths=[];
   state.stepEnterTimestamp=null;
@@ -1346,6 +1382,7 @@ document.getElementById('navToggleBtn').addEventListener('click',toggleNav);
 
 current=stages.findIndex(s=>s.id==='intake');
 if(!state.draftDate) state.draftDate=todayFormatted();
+restoreFromSessionLedger();
 renderAll();
 </script>
 </body>

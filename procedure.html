@@ -382,6 +382,8 @@ function processCsvFiles(files){
 csvStatus.textContent='読み込み中...';
 progressTableBody.innerHTML='';
 var loadedCount=0;
+var sessionHeaders=null;
+var sessionRows=[];
 
 Array.from(files).forEach(function(file){
 var reader=new FileReader();
@@ -399,6 +401,11 @@ if(rows[i].length>=3){
 console.log('Row',i,':',rows[i]);
 var tr=createProgressRow(rows[i],headers);
 progressTableBody.appendChild(tr);
+// apply/publishへ引き継ぐためにヘッダー付きオブジェクト行を蓄積
+if(!sessionHeaders)sessionHeaders=headers;
+var obj={};
+headers.forEach(function(h,k){obj[h]=rows[i][k]||'';});
+sessionRows.push(obj);
 }
 }
 loadedCount++;
@@ -406,6 +413,11 @@ if(loadedCount===files.length){
 csvStatus.textContent=files.length+'件のファイルを読み込みました';
 progressTableWrap.style.display='block';
 csvEmpty.style.display='none';
+// 手続きページ（apply/publish）へ引き継ぐためsessionStorageに保存
+if(sessionHeaders&&sessionRows.length){
+saveLedgerToSession({headers:sessionHeaders,rows:sessionRows});
+csvStatus.textContent=files.length+'件のファイルを読み込みました（'+sessionRows.length+'行を引き継ぎ可能）';
+}
 }
 };
 reader.readAsText(file,'UTF-8');

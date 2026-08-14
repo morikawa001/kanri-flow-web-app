@@ -214,6 +214,58 @@ function setupDropZone(dropZoneId, inputId) {
   });
 }
 
+// 台帳CSVのデータ（parsed）をstateへ復元し、復元メッセージを返す（apply/publish共通）
+function applyLedgerParsed(parsed) {
+  state.requestRows = parsed.rows.map(function(r) {
+    return {
+      type: r['報告区分'] || '初回公表',
+      base: r['元の起案番号'] || r['起案番号'] || '特2025-17_2-1',
+      date: r['公表日'] || r['報告期間'] || '',
+      approval: r['承認日'] || '',
+      url: r['jRCT URL'] || '',
+      facilityType: r['自施設他施設'] || '',
+      facilityDetail: r['報告詳細'] || '',
+      content: r['申請内容'] || '',
+      notes: r['備考'] || ''
+    };
+  });
+  // 申請内容チェックパネルの状態をCSVから復元（apply専用）
+  parsed.rows.forEach(function(r, i) {
+    if (r['申請内容チェック']) contentCheckFromCsv(r['申請内容チェック'], i);
+  });
+  var first = parsed.rows[0];
+  if (first['研究課題名']) state.studyTitle = first['研究課題名'];
+  if (first['担当者']) state.drafterName = first['担当者'];
+  if (first['所属・部門名']) state.drafterDept = first['所属・部門名'];
+  if (first['研究略称']) state.mailSubject = first['研究略称'];
+  if (first['jRCT番号']) state.jrctNo = first['jRCT番号'];
+  var studyCat = first['研究区分'] || '';
+  state.studyTypeNonspecific = studyCat.includes('非特定');
+  state.studyTypeSpecific = studyCat.includes('特定') && !studyCat.startsWith('非特定');
+  var subCat = first['サブ分類'] || '';
+  state.studyTypeUnapproved = subCat.includes('未承認適応外');
+  state.studyTypeFunding = subCat.includes('資金提供');
+  if (first['研究責任者1氏名']) state.managerName1 = first['研究責任者1氏名'];
+  else if (first['研究責任者']) state.managerName1 = first['研究責任者'];
+  if (first['研究責任者1所属']) state.managerAffil1 = first['研究責任者1所属'];
+  if (first['研究責任者1部署']) state.managerDept1 = first['研究責任者1部署'];
+  if (first['研究責任者1職名']) state.managerTitle1 = first['研究責任者1職名'];
+  if (first['研究責任者2氏名']) state.managerName2 = first['研究責任者2氏名'];
+  if (first['研究責任者2所属']) state.managerAffil2 = first['研究責任者2所属'];
+  if (first['研究責任者2部署']) state.managerDept2 = first['研究責任者2部署'];
+  if (first['研究責任者2職名']) state.managerTitle2 = first['研究責任者2職名'];
+  if (first['起案日']) state.draftDate = normalizeToYmdSlash(first['起案日']);
+  if (first['管理者報告メール送信日']) state.sendDate = first['管理者報告メール送信日'];
+  // 審査依頼書_添付資料の復元（apply専用）
+  if (pageMode === 'apply' && first['審査依頼書添付資料']) {
+    state.attachmentInputRaw = first['審査依頼書添付資料'];
+    state.attachmentData = state.attachmentInputRaw.split(/[,、，:：;；\s\u3000]+/).map(function(x){return x.trim();}).filter(Boolean);
+  }
+  state.managerPaths = parsed.rows.map(function(r) { return r['管理者側フォルダパス'] || ''; });
+  restoreMailFromLedger(first);
+  return parsed.rows.length + '件の依頼行を読み込み、研究課題情報・研究責任者・研究区分を復元しました。';
+}
+
 // CSV／Excelファイルから読み込み（ステップ1 復元用）
 function handleCsvLoadFromFile(ev) {
   var file = fileFromEvent(ev);
@@ -235,58 +287,11 @@ function handleCsvLoadFromFile(ev) {
       return;
     }
     try {
-      state.requestRows = parsed.rows.map(function(r) {
-        return {
-          type: r['報告区分'] || '初回公表',
-          base: r['元の起案番号'] || r['起案番号'] || '特2025-17_2-1',
-          date: r['公表日'] || r['報告期間'] || '',
-          approval: r['承認日'] || '',
-          url: r['jRCT URL'] || '',
-          facilityType: r['自施設他施設'] || '',
-          facilityDetail: r['報告詳細'] || '',
-          content: r['申請内容'] || '',
-          notes: r['備考'] || ''
-        };
-      });
-      // 申請内容チェックパネルの状態をCSVから復元（apply専用）
-      parsed.rows.forEach(function(r, i) {
-        if (r['申請内容チェック']) contentCheckFromCsv(r['申請内容チェック'], i);
-      });
-      var first = parsed.rows[0];
-      if (first['研究課題名']) state.studyTitle = first['研究課題名'];
-      if (first['担当者']) state.drafterName = first['担当者'];
-      if (first['所属・部門名']) state.drafterDept = first['所属・部門名'];
-      if (first['研究略称']) state.mailSubject = first['研究略称'];
-      if (first['jRCT番号']) state.jrctNo = first['jRCT番号'];
-      var studyCat = first['研究区分'] || '';
-      state.studyTypeNonspecific = studyCat.includes('非特定');
-      state.studyTypeSpecific = studyCat.includes('特定') && !studyCat.startsWith('非特定');
-      var subCat = first['サブ分類'] || '';
-      state.studyTypeUnapproved = subCat.includes('未承認適応外');
-      state.studyTypeFunding = subCat.includes('資金提供');
-      if (first['研究責任者1氏名']) state.managerName1 = first['研究責任者1氏名'];
-      else if (first['研究責任者']) state.managerName1 = first['研究責任者'];
-      if (first['研究責任者1所属']) state.managerAffil1 = first['研究責任者1所属'];
-      if (first['研究責任者1部署']) state.managerDept1 = first['研究責任者1部署'];
-      if (first['研究責任者1職名']) state.managerTitle1 = first['研究責任者1職名'];
-      if (first['研究責任者2氏名']) state.managerName2 = first['研究責任者2氏名'];
-      if (first['研究責任者2所属']) state.managerAffil2 = first['研究責任者2所属'];
-      if (first['研究責任者2部署']) state.managerDept2 = first['研究責任者2部署'];
-      if (first['研究責任者2職名']) state.managerTitle2 = first['研究責任者2職名'];
-      if (first['起案日']) state.draftDate = normalizeToYmdSlash(first['起案日']);
-      if (first['管理者報告メール送信日']) state.sendDate = first['管理者報告メール送信日'];
-      // 審査依頼書_添付資料の復元（apply専用）
-      if (pageMode === 'apply' && first['審査依頼書添付資料']) {
-        state.attachmentInputRaw = first['審査依頼書添付資料'];
-        state.attachmentData = state.attachmentInputRaw.split(/[,、，:：;；\s\u3000]+/).map(function(x){return x.trim();}).filter(Boolean);
-      }
-      state.managerPaths = parsed.rows.map(function(r) { return r['管理者側フォルダパス'] || ''; });
-      restoreMailFromLedger(first);
-      var cnt = parsed.rows.length;
-      var msg = '\u2705 ' + cnt + '件の依頼行を読み込み、研究課題情報・研究責任者・研究区分を復元しました。';
-      fileStatuses.csv = msg;
+      var msg = applyLedgerParsed(parsed);
+      var full = '\u2705 ' + msg;
+      fileStatuses.csv = full;
       var s1 = document.getElementById('csvStatusStep1');
-      if (s1) { s1.textContent = msg; s1.style.color = 'var(--success)'; }
+      if (s1) { s1.textContent = full; s1.style.color = 'var(--success)'; }
       renderAll();
     } catch(err) {
       fileStatuses.csv = 'CSV読み込みに失敗しました：' + err.message;
@@ -521,4 +526,82 @@ function downloadUpdatedLedgerCsv() {
   URL.revokeObjectURL(url);
   fileStatuses.csvStep7 = '✅ 更新済み台帳CSVをダウンロードしました。';
   renderTemplate();
+}
+
+// ============================================================
+// procedure.html（進捗管理CSV）からの引き継ぎ
+// ============================================================
+
+// 読み込んだ進捗管理CSVをsessionStorageへ保存（apply/publishへ引き継ぐ）
+function saveLedgerToSession(parsed) {
+  try {
+    sessionStorage.setItem('kanriFlowLedgerCsv', JSON.stringify({
+      headers: parsed.headers || [],
+      rows: parsed.rows || []
+    }));
+  } catch(e) {}
+}
+
+// sessionStorageから進捗管理CSVを取得
+function loadLedgerFromSession() {
+  try {
+    var raw = sessionStorage.getItem('kanriFlowLedgerCsv');
+    if (!raw) return null;
+    var data = JSON.parse(raw);
+    if (!data || !data.rows || !data.rows.length) return null;
+    return data;
+  } catch(e) { return null; }
+}
+
+// sessionStorageの進捗管理CSVを破棄
+function clearLedgerFromSession() {
+  try { sessionStorage.removeItem('kanriFlowLedgerCsv'); } catch(e) {}
+}
+
+// procedure.htmlで読み込んだCSVを復元（1件なら即復元、複数件なら選択待ち）
+function restoreFromSessionLedger() {
+  var data = loadLedgerFromSession();
+  if (!data) return;
+  var parsed = {headers: data.headers || [], rows: data.rows || []};
+  if (!parsed.rows.length) return;
+  if (parsed.rows.length === 1) {
+    fileStatuses.csv = '\u2705 ' + applyLedgerParsed(parsed);
+    clearLedgerFromSession();
+    return;
+  }
+  // 複数件は行選択UIで引き継ぐ行を選んでもらう
+  state.loadedLedgerHeaders = parsed.headers;
+  state.loadedLedgerRows = parsed.rows;
+  state.selectedLedgerIndexes = [];
+  state.pendingLedgerFromSession = true;
+}
+
+// 選択した行だけを復元
+function applySelectedSessionLedger() {
+  var idxs = (state.selectedLedgerIndexes || []).filter(function(i) { return state.loadedLedgerRows[i]; });
+  if (!idxs.length) return;
+  var selected = idxs.map(function(i) { return state.loadedLedgerRows[i]; });
+  fileStatuses.csv = '\u2705 ' + applyLedgerParsed({headers: state.loadedLedgerHeaders, rows: selected});
+  clearLedgerFromSession();
+  state.pendingLedgerFromSession = false;
+  state.loadedLedgerRows = [];
+  state.loadedLedgerHeaders = [];
+  state.selectedLedgerIndexes = [];
+}
+
+// 引き継ぎ行の選択をトグル（requestRows同期は行わない）
+function toggleSessionLedgerSelection(idx, checked) {
+  var set = new Set(state.selectedLedgerIndexes || []);
+  if (checked) set.add(idx); else set.delete(idx);
+  state.selectedLedgerIndexes = Array.from(set).sort(function(a, b) { return a - b; });
+}
+
+// すべての引き継ぎ行を選択
+function selectAllSessionLedgerRows() {
+  state.selectedLedgerIndexes = state.loadedLedgerRows.map(function(_, i) { return i; });
+}
+
+// 引き継ぎ行の選択をクリア
+function clearSessionLedgerRows() {
+  state.selectedLedgerIndexes = [];
 }
