@@ -37,7 +37,7 @@ App.state = (function() {
         {id:'managerDept2',label:'研究責任者2 所属部署',type:'text',placeholder:'例：呼吸器内科'},
         {id:'managerTitle2',label:'研究責任者2 職名',type:'text',placeholder:'例：教授'},
         {id:'managerName2',label:'研究責任者2 氏名',type:'text',placeholder:'例：〇〇 〇〇'},
-        {id:'draftDate',label:'起案日',type:'text',placeholder:'yyyy/mm/dd（自動入力されます）'},
+        {id:'draftDate',label:'申請管理者報告_起案日',type:'text',placeholder:'yyyy/mm/dd（自動入力されます）'},
         {id:'drafterName',label:'起案・申請書類の起案者',type:'text',placeholder:'例：森川 〇〇'},
         {id:'drafterDept',label:'所属・部門名',type:'text',placeholder:'例：臨床研究支援部門',options:['臨床研究管理・調整室']},
       ],

@@ -53,6 +53,16 @@ function csvEscape(v) {
   return '"' + String(v ?? '').replace(/"/g, '""') + '"';
 }
 
+// ページモードに応じた起案日列名（apply=申請管理者報告_起案日 / publish=公表管理者報告_起案日）
+function draftDateColumnName() {
+  return pageMode === 'apply' ? '申請管理者報告_起案日' : '公表管理者報告_起案日';
+}
+
+// 行オブジェクトから起案日を取得（どのページの列名でも可・旧「起案日」にも対応）
+function rowDraftDate(r) {
+  return (r && (r['申請管理者報告_起案日'] || r['公表管理者報告_起案日'] || r['起案日'])) || '';
+}
+
 // 申請内容チェックパネルの状態をCSV保存用のJSON文字列へ（apply専用）
 function contentCheckToCsv(rowIdx) {
   if (pageMode !== 'apply' || typeof contentCheckState === 'undefined') return '';
@@ -87,7 +97,7 @@ function contentCheckFromCsv(text, rowIdx) {
 function csvFromRequests() {
   var rows = requestRowsData();
   var isApply = pageMode === 'apply';
-  var header = ['起案日','元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
+  var header = [draftDateColumnName(),'元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
   if (isApply) header.splice(header.indexOf('公表日') + 1, 0, '承認日');
   if (isApply) header.push('申請内容','備考','申請内容チェック','審査依頼書添付資料');
   var mailDraft = getMailDraftRecord();
@@ -254,7 +264,7 @@ function applyLedgerParsed(parsed) {
   if (first['研究責任者2所属']) state.managerAffil2 = first['研究責任者2所属'];
   if (first['研究責任者2部署']) state.managerDept2 = first['研究責任者2部署'];
   if (first['研究責任者2職名']) state.managerTitle2 = first['研究責任者2職名'];
-  if (first['起案日']) state.draftDate = normalizeToYmdSlash(first['起案日']);
+  if (rowDraftDate(first)) state.draftDate = normalizeToYmdSlash(rowDraftDate(first));
   if (first['管理者報告メール送信日']) state.sendDate = first['管理者報告メール送信日'];
   // 審査依頼書_添付資料の復元（apply専用）
   if (pageMode === 'apply' && first['審査依頼書添付資料']) {
@@ -368,8 +378,8 @@ function clearLedgerRowSelection() {
 function ledgerCsvForDownload() {
   var headers = state.loadedLedgerHeaders.length
     ? state.loadedLedgerHeaders.slice()
-    : ['起案日','起案番号','報告区分','担当者','ステータス','公表日','jRCT URL','元の起案番号','研究課題名','研究責任者'];
-  if (!headers.includes('起案日')) headers.unshift('起案日');
+    : [draftDateColumnName(),'起案番号','報告区分','担当者','ステータス','公表日','jRCT URL','元の起案番号','研究課題名','研究責任者'];
+  if (!headers.includes(draftDateColumnName())) headers.unshift(draftDateColumnName());
   if (!headers.includes('研究課題名')) headers.push('研究課題名');
   if (!headers.includes('研究責任者')) headers.push('研究責任者');
   if (!headers.includes('ステータス')) headers.push('ステータス');
@@ -462,7 +472,7 @@ function ledgerCsvForDownload() {
 
   var rows = baseRows.map(function(r, idx) {
     var obj = Object.assign({}, r);
-    if (!obj['起案日']) obj['起案日'] = draftDate;
+    if (!obj[draftDateColumnName()]) obj[draftDateColumnName()] = draftDate;
     if (!obj['研究課題名']) obj['研究課題名'] = studyTitle;
     if (!obj['研究責任者']) obj['研究責任者'] = managerName;
     if (!obj['担当者']) obj['担当者'] = drafter;

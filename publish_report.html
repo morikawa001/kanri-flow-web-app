@@ -77,7 +77,7 @@ html[data-theme="dark"] body.page-publish{
 <script>var pageMode = 'publish';</script>
 <script src="common.js?v=20260811"></script>
 <script src="common-flow.js?v=20260815"></script>
-<script src="common-csv.js?v=20260815"></script>
+<script src="common-csv.js?v=20260817"></script>
 <script src="common-docx.js?v=20260816"></script>
 <script src="common-ui.js?v=20260815"></script>
 <script>
@@ -109,7 +109,7 @@ fields:[
 {id:'managerDept2',label:'研究責任者2 所属部署',type:'text',placeholder:'例：呼吸器内科'},
 {id:'managerTitle2',label:'研究責任者2 職名',type:'text',placeholder:'例：教授'},
 {id:'managerName2',label:'研究責任者2 氏名',type:'text',placeholder:'例：〇〇 〇〇'},
-{id:'draftDate',label:'起案日',type:'text',placeholder:'yyyy/mm/dd（自動入力されます）'},
+{id:'draftDate',label:'公表管理者報告_起案日',type:'text',placeholder:'yyyy/mm/dd（自動入力されます）'},
 {id:'drafterName',label:'起案・報告案の報告者',type:'text',placeholder:'例：森川 〇〇'},
 {id:'drafterDept',label:'所属・部門名',type:'text',placeholder:'例：臨床研究支援部門',options:['臨床研究管理・調整室']},
 ],
@@ -485,7 +485,7 @@ ${stage.id==='intake'
 <div class="row-pick-main">
 <strong>行${i+1}：${h(r['起案番号']||'')} ／ ${h(r['報告区分']||'')}</strong>
 <div class="row-pick-grid">
-<span class="rp-item"><em>起案日</em><b>${h(r['起案日']||'—')}</b></span>
+<span class="rp-item"><em>公表管理者報告_起案日</em><b>${h(rowDraftDate(r)||'—')}</b></span>
 <span class="rp-item"><em>公表日</em><b>${h(r['公表日']||'—')}</b></span>
 <span class="rp-item"><em>承認日</em><b>${h(r['承認日']||'—')}</b></span>
 <span class="rp-item"><em>jRCT番号</em><b>${h(r['jRCT番号']||'—')}</b></span>
