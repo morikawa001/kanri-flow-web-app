@@ -99,7 +99,7 @@ html[data-theme="dark"] body.page-apply{
 <script src="common-csv.js?v=20260814"></script>
 <script src="common-docx.js?v=20260811"></script>
 <script src="common-ui.js?v=20260814"></script>
-<script src="state.js?v=20260811"></script>
+<script src="state.js?v=20260814"></script>
 <script src="utils.js?v=20260811"></script>
 <script src="dates.js?v=20260811"></script>
 <script src="identifiers.js?v=20260811"></script>
@@ -113,7 +113,8 @@ checks:[
 ['管理メールを確認した','CRB申請依頼のメールを確認する'],
 ['研究課題名・略称を入力した','起案文・申請書類・メール件名に共通して使う情報'],
 ['研究責任者を入力した','所属・職名・氏名を最大2名分、報告メールの宛先に利用する'],
-['研究区分を選択した','特定 or 非特定臨床研究。未承認・適応外・資金提供も該当する場合チェック'],
+ ['研究区分を選択した','特定 or 非特定臨床研究。未承認・適応外・資金提供も該当する場合チェック'],
+ ['報告区分を確認した','依頼行の報告区分（新規申請／変更申請など）を確認する'],
 ],
 notes:[
 ['warn','入口で入力した情報は以降の全ステップで自動利用されるため、省略すると後工程で再入力が必要になる。'],
@@ -635,17 +636,32 @@ function validateIntakeRequired(){
     if(!mark(el, val==='')) ok=false;
     return val!=='';
   }
-  // 研究略称・研究課題名・起案日・起案・申請書類の起案者・所属・部門名
-  ['mailSubject','studyTitle','draftDate','drafterName','drafterDept'].forEach(function(id){
+  // プルダウン選択式の項目（所属・部門名／研究責任者1の所属機関）はセレクト値を判定し、表示中の要素を強調する
+  function checkPresetField(id){
+    const sel=document.querySelector('[data-preset-select="'+id+'"]');
+    const free=document.getElementById(id);
+    let val=(state[id]!=null?String(state[id]):'').trim();
+    if(sel){
+      if(sel.value && sel.value!=='__free') val=sel.value;
+      else if(free && free.value.trim()) val=free.value.trim();
+    }
+    const bad=val==='';
+    if(!mark(sel,bad)) ok=false;
+    if(!mark(free,bad)) ok=false;
+    return !bad;
+  }
+  // 研究略称・研究課題名・起案日・起案・申請書類の起案者
+  ['mailSubject','studyTitle','draftDate','drafterName'].forEach(function(id){
     checkState(id, document.getElementById(id));
   });
+  checkPresetField('drafterDept'); // 所属・部門名（プルダウン選択式）
   // 審査依頼書_添付資料
   checkState('attachmentInputRaw', document.getElementById('attachmentInput'));
   // 研究区分（特定／非特定のいずれか必須）
   const hasStudyType=!!state.studyTypeSpecific||!!state.studyTypeNonspecific;
   if(!mark(document.querySelector('.study-type-wrap'), !hasStudyType)) ok=false;
   // 研究責任者1行目（所属機関・氏名）
-  checkState('managerAffil1', document.getElementById('managerAffil1'));
+  checkPresetField('managerAffil1'); // 所属機関（プルダウン選択式）
   checkState('managerName1', document.getElementById('managerName1'));
   // 申請内容チェックが全くない場合はエラー
   const anyChecked=Object.keys(contentCheckState||{}).some(function(k){ return contentCheckState[k]&&contentCheckState[k].checked; });
