@@ -115,7 +115,7 @@ function rowFromLedger(r) {
 return {
     type: r['報告区分'] || '初回公表',
     base: r['元の起案番号'] || r['起案番号'] || '特2025-17_2-1',
-    date: r['公表日'] || r['報告期間'] || '',
+    date: r['報告期間'] ? formatDateRangeToSlash(r['報告期間']) : normalizeToYmdSlash(r['公表日'] || ''),
     approval: r['承認日'] || '',
     url: r['jRCT URL'] || '',
     facilityType: r['自施設他施設'] || '',
@@ -199,10 +199,10 @@ function todayYmd() {
   return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
 }
 
-// 今日の日付をYYYY/MM/DD形式で返す
+// 今日の日付をYYYY/M/D形式で返す（月日は先頭ゼロなし）
 function todayFormatted() {
   var d = new Date();
-  return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
 }
 
 // 日付をYYYY/M/D形式に正規化（月日は先頭ゼロなし）

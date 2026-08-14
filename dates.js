@@ -20,10 +20,10 @@ App.dates = (function() {
     return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
   }
 
-  // 今日の日付をYYYY/MM/DD形式で返す
+  // 今日の日付をYYYY/M/D形式で返す（月日は先頭ゼロなし）
   function todayFormatted() {
     var d = new Date();
-    return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
   }
 
   // 日付をYYYY/M/D形式に正規化（月日は先頭ゼロなし）

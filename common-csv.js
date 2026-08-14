@@ -109,14 +109,14 @@ function csvFromRequests() {
   var subCategory = subParts.join('・');
   var mailSubject = getValue('mailSubject') || '';
   var paths = state.managerPaths || [];
-  var draftDate = state.draftDate || todayFormatted();
+  var draftDate = normalizeToYmdSlash(state.draftDate || todayFormatted());
   var body = rows.map(function(r, idx) {
     var rowArr = [
       draftDate, r.base || '', requestOutputNo(r), r.type, drafter, getValue('drafterDept') || '', status,
-      r.type === '定期報告' ? '' : r.date || ''
+      r.type === '定期報告' ? '' : normalizeToYmdSlash(r.date || '')
     ];
     if (pageMode === 'apply') rowArr.push(r.approval || '');
-    rowArr.push(r.type === '定期報告' ? r.date || '' : '', r.url || '');
+    rowArr.push(r.type === '定期報告' ? formatDateRangeToSlash(r.date || '') : '', r.url || '');
     rowArr.push(getValue('jrctNo') || '', studyTitle, managerName,
       studyCategory, subCategory, mailSubject,
       getValue('managerAffil1') || '', getValue('managerDept1') || '', getValue('managerTitle1') || '', getValue('managerName1') || '',
@@ -220,7 +220,7 @@ function applyLedgerParsed(parsed) {
     return {
       type: r['報告区分'] || '初回公表',
       base: r['元の起案番号'] || r['起案番号'] || '特2025-17_2-1',
-      date: r['公表日'] || r['報告期間'] || '',
+      date: r['報告期間'] ? formatDateRangeToSlash(r['報告期間']) : normalizeToYmdSlash(r['公表日'] || ''),
       approval: r['承認日'] || '',
       url: r['jRCT URL'] || '',
       facilityType: r['自施設他施設'] || '',
@@ -412,7 +412,7 @@ function ledgerCsvForDownload() {
   }
 
   var sendDate = getValue('sendDate') || '';
-  var draftDate = state.draftDate || todayFormatted();
+  var draftDate = normalizeToYmdSlash(state.draftDate || todayFormatted());
   var paths = state.managerPaths || [];
   var mailDraft = getMailDraftRecord();
   var studyTitle = getValue('studyTitle') || '';
@@ -440,9 +440,9 @@ function ledgerCsvForDownload() {
         return {
           '起案番号': requestOutputNo(r),
           '報告区分': r.type,
-          '公表日': r.type === '定期報告' ? '' : r.date || '',
+          '公表日': r.type === '定期報告' ? '' : normalizeToYmdSlash(r.date || ''),
           '承認日': r.approval || '',
-          '報告期間': r.type === '定期報告' ? r.date || '' : '',
+          '報告期間': r.type === '定期報告' ? formatDateRangeToSlash(r.date || '') : '',
           'jRCT URL': r.url || '',
           '元の起案番号': r.base || '',
           '研究課題名': studyTitle,

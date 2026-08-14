@@ -109,7 +109,7 @@ App.identifiers = (function() {
     return {
       type: r['報告区分'] || '初回公表',
       base: r['元の起案番号'] || r['起案番号'] || '特2025-17_2-1',
-      date: r['公表日'] || r['報告期間'] || '',
+      date: r['報告期間'] ? formatDateRangeToSlash(r['報告期間']) : normalizeToYmdSlash(r['公表日'] || ''),
       url: r['jRCT URL'] || '',
       facilityType: r['自施設他施設'] || '',
       facilityDetail: r['報告詳細'] || ''

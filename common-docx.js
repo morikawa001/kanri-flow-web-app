@@ -514,12 +514,12 @@ function docxDataForRow(r) {
       var parts = [];
       if (pubPairs.length) {
         var maxW = Math.max.apply(null, pubPairs.map(function(arr) { return fullWidthWidth(arr[0]); }));
-        parts.push('実施計画の公表（' + pubPairs.map(function(arr) { return padFullWidth(arr[0], maxW) + '　' + (arr[1]?.date || ''); }).join('、') + '）');
+        parts.push('実施計画の公表（' + pubPairs.map(function(arr) { return padFullWidth(arr[0], maxW) + '　' + formatDateToJapanese(arr[1]?.date || ''); }).join('、') + '）');
       }
       if (hasPeriodic) {
         var periodicRow = targetRows.find(function(x) { return x?.type === '定期報告'; });
         if (periodicRow?.date) {
-          parts.push('定期報告（報告期間：' + periodicRow.date + '）');
+          parts.push('定期報告（報告期間：' + formatDateRangeToJapanese(periodicRow.date) + '）');
         }
       }
       if (hasIssue) {
@@ -726,7 +726,7 @@ function generateJrctUrlXlsx(allRows) {
   var wb = XLSX.utils.book_new();
   var header = ['jRCT種別', '公表日', 'jRCT URL', '管理番号'];
   var data = [header];
-  pairs.forEach(function(arr) { data.push([arr[0], arr[1].date || '', arr[1].url || '', requestOutputNo(arr[1])]); });
+  pairs.forEach(function(arr) { data.push([arr[0], normalizeToYmdSlash(arr[1].date || ''), arr[1].url || '', requestOutputNo(arr[1])]); });
   var ws = XLSX.utils.aoa_to_sheet(data);
   ws['!cols'] = [{wch: 14}, {wch: 14}, {wch: 50}, {wch: 30}];
   XLSX.utils.book_append_sheet(wb, ws, 'jRCT URL');

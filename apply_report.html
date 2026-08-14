@@ -96,13 +96,13 @@ html[data-theme="dark"] body.page-apply{
 <script>var pageMode = 'apply';</script>
 <script src="common.js?v=20260811"></script>
 <script src="common-flow.js?v=20260815"></script>
-<script src="common-csv.js?v=9e41261"></script>
-<script src="common-docx.js?v=20260811"></script>
+<script src="common-csv.js?v=20260815"></script>
+<script src="common-docx.js?v=20260815"></script>
 <script src="common-ui.js?v=20260815"></script>
 <script src="state.js?v=20260814"></script>
 <script src="utils.js?v=20260811"></script>
 <script src="dates.js?v=20260815"></script>
-<script src="identifiers.js?v=20260811"></script>
+<script src="identifiers.js?v=20260815"></script>
 <script>
 const stages = [
 {
@@ -1377,7 +1377,7 @@ function applyJRCTData(data){
   if(data.isUnapproved){const el=document.getElementById('studyTypeUnapproved');if(el&&!el.checked) el.click();}
   if(data.isFunding){const el=document.getElementById('studyTypeFunding');if(el&&!el.checked) el.click();}
   if(data.pubDate&&state.requestRows&&state.requestRows[0]){
-    state.requestRows[0].date=data.pubDate;
+    state.requestRows[0].date=normalizeToYmdSlash(data.pubDate);
   }
   if(data.approval&&state.requestRows&&state.requestRows[0]){
     state.requestRows[0].approval=data.approval;

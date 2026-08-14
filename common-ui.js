@@ -98,7 +98,7 @@ function renderRequestRows(hostOverride) {
         '<input class="input" data-r-approval="' + i + '" value="' + h(formatDateToJapanese(r.approval||'')) + '" placeholder="例：2026年7月5日">' +
         '</div>'
       : '<div class="field"><label>' + dateLabel + '</label>' +
-        '<input class="input" data-r-date="' + i + '" value="' + h(r.date || '') + '" placeholder="' + datePlaceholder + '"' + (isPeriodic ? ' pattern="\\d{4}/\\d{1,2}/\\d{1,2}～\\d{4}/\\d{1,2}/\\d{1,2}" title="形式：yyyy/m/d～yyyy/m/d"' : '') + '>' +
+        '<input class="input" data-r-date="' + i + '" value="' + h(isPeriodic ? formatDateRangeToSlash(r.date || '') : normalizeToYmdSlash(r.date || '')) + '" placeholder="' + datePlaceholder + '"' + (isPeriodic ? ' pattern="\\d{4}/\\d{1,2}/\\d{1,2}～\\d{4}/\\d{1,2}/\\d{1,2}" title="形式：yyyy/m/d～yyyy/m/d"' : '') + '>' +
         (isPeriodic ? '<div class="help" style="color:var(--primary)">形式：yyyy/m/d～yyyy/m/d（最初の日付入力後に「～」が自動挿入されます）</div>' : '') +
         '</div>';
     var urlField = isApply
@@ -255,7 +255,10 @@ function renderRequestRows(hostOverride) {
     });
     el.addEventListener('change', function() {
       var i = +el.dataset.rDate;
-      setRequestRow(i, 'date', el.value);
+      var row = state.requestRows[i];
+      var val = row && row.type === '定期報告' ? formatDateRangeToSlash(el.value) : normalizeToYmdSlash(el.value);
+      el.value = val;
+      setRequestRow(i, 'date', val);
       renderAll();
     });
   });
