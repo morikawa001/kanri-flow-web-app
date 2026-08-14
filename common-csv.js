@@ -604,4 +604,72 @@ function selectAllSessionLedgerRows() {
 // 引き継ぎ行の選択をクリア
 function clearSessionLedgerRows() {
   state.selectedLedgerIndexes = [];
+}
+
+// ============================================================
+// ステップ3：既存台帳CSVへのデータ追記
+// ============================================================
+
+// CSVテキストをファイル名指定でダウンロード
+function downloadCsvText(csv, filename) {
+  var blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// 既存台帳CSV／Excelデータの読み込み（ステップ3 追記用）
+function handleAppendCsvLoad(ev) {
+  var file = fileFromEvent(ev);
+  if (!file) {
+    fileStatuses.csv = 'ファイルが選択されていません。';
+    renderTemplate();
+    return;
+  }
+  readLedgerFile(file, function(parsed, err) {
+    if (err) {
+      fileStatuses.csv = 'ファイル読み込みに失敗しました：' + err.message;
+      renderTemplate();
+      return;
+    }
+    if (!parsed || !parsed.rows.length) {
+      fileStatuses.csv = '読み込んだCSV／Excelにデータ行がありません。';
+      renderTemplate();
+      return;
+    }
+    state.appendLoadedCsv = {headers: parsed.headers, rows: parsed.rows, name: file.name};
+    fileStatuses.csv = '\u2705 ' + parsed.rows.length + '件の既存データを読み込みました。「データを追加」で末尾に現在の案件データを追記してダウンロードできます。';
+    renderAll();
+  });
+}
+
+// 読み込んだ既存台帳CSVの末尾に現在の案件データを追記してダウンロード
+function appendCurrentRowsToLoadedCsv() {
+  if (!state.appendLoadedCsv) {
+    fileStatuses.csv = '先に「台帳CSVデータの読み込み」ボタン（またはドラッグ＆ドロップ）で台帳CSVを読み込んでください。';
+    renderAll();
+    return;
+  }
+  var loaded = state.appendLoadedCsv;
+  // 現在のフォーム情報から台帳CSVを生成し、ヘッダー付きオブジェクト行として取得
+  var current = parseCsvRobust(csvFromRequests());
+  var headers = loaded.headers;
+  var rows = loaded.rows.map(function(r) { return Object.assign({}, r); });
+  current.rows.forEach(function(cr) {
+    var nr = {};
+    headers.forEach(function(h) { nr[h] = cr[h] || ''; });
+    rows.push(nr);
+  });
+  var csvText = headers.map(csvEscape).join(',') + '\n' + rows.map(function(r) {
+    return headers.map(function(h) { return csvEscape(r[h] || ''); }).join(',');
+  }).join('\n');
+  var filename = ledgerCsvFileName().replace('.csv', '_追記済み.csv');
+  downloadCsvText(csvText, filename);
+  fileStatuses.csv = '\u2705 ' + loaded.rows.length + '件の既存データの末尾に現在の案件データ ' + current.rows.length + ' 行を追記してダウンロードしました。';
+  renderAll();
 }

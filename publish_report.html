@@ -226,7 +226,8 @@ const state = {
   stepEnterTimestamp:null,
   stepDurations:{},
   lastRenderedStageId:null,
-  pendingLedgerFromSession:false
+  pendingLedgerFromSession:false,
+  appendLoadedCsv:null
 };
 let folderSelections = {};
 
@@ -579,6 +580,10 @@ ${generatedHTML}
   }
 
   if(stage.id==='drafts'){
+    document.getElementById('csvAppendLoadBtn')?.addEventListener('click',()=>{document.getElementById('csvAppendInput')?.click();});
+    document.getElementById('csvAppendInput')?.addEventListener('change',handleAppendCsvLoad);
+    setupDropZone('csvAppendDropZone','csvAppendInput');
+    document.getElementById('appendDataBtn')?.addEventListener('click',appendCurrentRowsToLoadedCsv);
   }
 
   if(stage.id==='work'){
@@ -864,8 +869,17 @@ jRCT URL：${h(r.url||'')}</div>
       <h4>台帳CSV出力</h4>
       <div style="display:flex;gap:.6rem;flex-wrap:wrap">
         <button class="ghost-btn" id="downloadCsvBtn">台帳CSVひな型をダウンロード</button>
+        <button class="ghost-btn" id="csvAppendLoadBtn">台帳CSVデータの読み込み</button>
+        <input type="file" id="csvAppendInput" accept=".csv,.xlsx,.xls" style="display:none">
       </div>
-      <div class="help" id="csvStatus">${fileStatuses.csv || ''}</div>
+      <div id="csvAppendDropZone" class="csv-dropzone" style="margin-top:.6rem;padding:.8rem;text-align:center">
+        <span class="help">既存の台帳CSV・Excelファイルをここへドラッグ＆ドロップでも読み込めます</span>
+      </div>
+      <div style="margin-top:.6rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+        <button class="primary-btn" id="appendDataBtn">データを追加</button>
+        <span class="help" id="csvAppendInfo">${state.appendLoadedCsv ? h(state.appendLoadedCsv.rows.length)+'件の既存データを読込済み' : '台帳CSVデータはまだ読み込まれていません'}</span>
+      </div>
+      <div class="help" id="csvStatus" style="margin-top:.5rem">${fileStatuses.csv || ''}</div>
     </div>
 
     <div class="template-card">
@@ -1352,6 +1366,7 @@ function resetAll(){
   state.loadedLedgerHeaders=[];
   state.selectedLedgerIndexes=[];
   state.pendingLedgerFromSession=false;
+  state.appendLoadedCsv=null;
   state.requestRows=[{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}];
   state.managerPaths=[];
   state.stepEnterTimestamp=null;
