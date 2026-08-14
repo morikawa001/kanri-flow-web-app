@@ -1402,7 +1402,7 @@ function bindContentCheckEvents(panel){
     });
   });
 }
-// チェックパネルのチェック済み項目を改行区切りで変更内容欄（申請内容）へ書き出す（applyのみ）
+// チェックパネルのチェック済み項目を「、」区切りで変更内容欄（申請内容）へ書き出す（applyのみ・先頭に申請区分）
 function syncContentFromPanel(rowIdx){
   if(pageMode!=='apply') return;
   const row=state.requestRows&&state.requestRows[rowIdx];
@@ -1412,6 +1412,9 @@ function syncContentFromPanel(rowIdx){
   function checkedFor(key){ return contentCheckState[prefix+key]&&contentCheckState[prefix+key].checked; }
   const itemByKey={};
   CONTENT_CHECK_ITEMS.forEach(function(it){ itemByKey[it.key]=it; });
+  // 先頭に申請区分（新規申請／変更申請）を出力
+  if(checkedFor('new')) lines.push('新規申請');
+  if(checkedFor('chg')) lines.push('変更申請');
   CONTENT_OUTPUT_ORDER.forEach(function(key){
     const item=itemByKey[key];
     if(!item) return;
@@ -1433,7 +1436,7 @@ function syncContentFromPanel(rowIdx){
     const st=contentCheckState[prefix+item.key];
     lines.push(item.label+(st.free?'（'+st.free+'）':''));
   });
-  row.content=lines.join('\n');
+  row.content=lines.join('、');
   const inp=document.querySelector('[data-r-content="'+rowIdx+'"]');
   if(inp) inp.value=contentDisplayMask(row.content);
   renderTemplate();
