@@ -17,6 +17,7 @@
 .assist-dialog ul{margin:.4rem 0 .7rem;padding-left:1.2rem;font-size:.82rem;color:var(--text);line-height:1.7}
 .assist-dialog .assist-btn-row{display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;margin-top:.9rem;padding-top:.8rem;border-top:1px solid var(--border)}
 .assist-highlight{border-color:var(--error)!important;box-shadow:0 0 0 3px rgba(181,52,130,.15)!important;animation:pulse 2s ease-in-out infinite}
+.input-invalid{border-color:var(--error)!important;background:var(--error-soft)!important;box-shadow:0 0 0 3px rgba(252,129,129,.18)}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(181,52,130,.15)}50%{box-shadow:0 0 0 5px rgba(181,52,130,.25)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 html[data-theme="light"] body.page-publish{
@@ -566,6 +567,56 @@ ${generatedHTML}
   }
 }
 
+// 入口情報（ステップ1）の必須項目チェック（publish専用・未入力欄を赤色で強調）
+function validateIntakeRequired(){
+  if(pageMode!=='publish') return true;
+  const invalidCls='input-invalid';
+  document.querySelectorAll('.'+invalidCls).forEach(function(el){ el.classList.remove(invalidCls); });
+  let ok=true;
+  function mark(el, bad){
+    if(el) el.classList.toggle(invalidCls, !!bad);
+    return !bad;
+  }
+  function checkState(id, el){
+    const val=(state[id]!=null?String(state[id]):'').trim();
+    if(!mark(el, val==='')) ok=false;
+    return val!=='';
+  }
+  // プルダウン選択式の項目（所属・部門名／研究責任者1の所属機関）はセレクト値を判定し、表示中の要素を強調する
+  function checkPresetField(id){
+    const sel=document.querySelector('[data-preset-select="'+id+'"]');
+    const free=document.getElementById(id);
+    let val=(state[id]!=null?String(state[id]):'').trim();
+    if(sel){
+      if(sel.value && sel.value!=='__free') val=sel.value;
+      else if(free && free.value.trim()) val=free.value.trim();
+    }
+    const bad=val==='';
+    if(!mark(sel,bad)) ok=false;
+    if(!mark(free,bad)) ok=false;
+    return !bad;
+  }
+  // 研究略称・研究課題名・jRCT番号・起案・報告案の報告者
+  ['mailSubject','studyTitle','jrctNo','drafterName'].forEach(function(id){
+    checkState(id, document.getElementById(id));
+  });
+  checkPresetField('drafterDept'); // 所属・部門名（プルダウン選択式）
+  // 研究区分（特定／非特定のいずれか必須）
+  const hasStudyType=!!state.studyTypeSpecific||!!state.studyTypeNonspecific;
+  if(!mark(document.querySelector('.study-type-wrap'), !hasStudyType)) ok=false;
+  // 研究責任者1行目（所属機関・氏名）
+  checkPresetField('managerAffil1'); // 所属機関（プルダウン選択式）
+  checkState('managerName1', document.getElementById('managerName1'));
+  // jRCT URL（全依頼行の入力欄）
+  const urlFields=document.querySelectorAll('[data-r-url]');
+  if(urlFields.length){
+    urlFields.forEach(function(el){
+      if(!mark(el, !String(el.value||'').trim())) ok=false;
+    });
+  }
+  return ok;
+}
+
 function renderTemplate(){
   const wrap=document.getElementById('templateStage');
   const stage=stages[current];
@@ -607,6 +658,10 @@ ${idx===vis.length-1?'完了する':'このステップを完了 →'}
     });
     w.querySelector('[data-next]')?.addEventListener('click',()=>{
       setStateFromDom();
+      if(stage.id==='intake'&&pageMode==='publish'&&!validateIntakeRequired()){
+        alert('必要項目が未入力です');
+        return;
+      }
       done[current]=true;
       const v=visibleStages();
       const i=v.findIndex(s=>s.id===stage.id);
