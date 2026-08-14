@@ -227,12 +227,12 @@ function reportDocxDataForRow(r) {
       var parts = [];
       if (pubPairs.length) {
         var maxW = Math.max.apply(null, pubPairs.map(function(arr) { return fullWidthWidth(arr[0]); }));
-        parts.push('実施計画の公表（' + pubPairs.map(function(arr) { return padFullWidth(arr[0], maxW) + '　' + formatDateToJapanese(arr[1]?.date || ''); }).join('、') + '）');
+        parts.push('実施計画の公表（' + pubPairs.map(function(arr) { return padFullWidth(arr[0], maxW) + '　' + normalizeToYmdSlash(arr[1]?.date || ''); }).join('、') + '）');
       }
       if (hasPeriodic) {
         var periodicRow = relatedRows.find(function(x) { return x?.type === '定期報告'; });
         if (periodicRow?.date) {
-          parts.push('定期報告（報告期間：' + formatDateRangeToJapanese(periodicRow.date) + '）');
+          parts.push('定期報告（報告期間：' + formatDateRangeToSlash(periodicRow.date) + '）');
         }
       }
       if (hasIssue) {
@@ -514,12 +514,12 @@ function docxDataForRow(r) {
       var parts = [];
       if (pubPairs.length) {
         var maxW = Math.max.apply(null, pubPairs.map(function(arr) { return fullWidthWidth(arr[0]); }));
-        parts.push('実施計画の公表（' + pubPairs.map(function(arr) { return padFullWidth(arr[0], maxW) + '　' + formatDateToJapanese(arr[1]?.date || ''); }).join('、') + '）');
+        parts.push('実施計画の公表（' + pubPairs.map(function(arr) { return padFullWidth(arr[0], maxW) + '　' + normalizeToYmdSlash(arr[1]?.date || ''); }).join('、') + '）');
       }
       if (hasPeriodic) {
         var periodicRow = targetRows.find(function(x) { return x?.type === '定期報告'; });
         if (periodicRow?.date) {
-          parts.push('定期報告（報告期間：' + formatDateRangeToJapanese(periodicRow.date) + '）');
+          parts.push('定期報告（報告期間：' + formatDateRangeToSlash(periodicRow.date) + '）');
         }
       }
       if (hasIssue) {
