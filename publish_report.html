@@ -579,13 +579,6 @@ ${generatedHTML}
     document.getElementById('sessionApplyBtn')?.addEventListener('click',()=>{applySelectedSessionLedger();renderAll();});
   }
 
-  if(stage.id==='drafts'){
-    document.getElementById('csvAppendLoadBtn')?.addEventListener('click',()=>{document.getElementById('csvAppendInput')?.click();});
-    document.getElementById('csvAppendInput')?.addEventListener('change',handleAppendCsvLoad);
-    setupDropZone('csvAppendDropZone','csvAppendInput');
-    document.getElementById('appendDataBtn')?.addEventListener('click',appendCurrentRowsToLoadedCsv);
-  }
-
   if(stage.id==='work'){
     document.getElementById('csvInputStep5')?.addEventListener('change',handleLedgerLoadForBack);
     setupDropZone('csvDropZoneStep5','csvInputStep5');
@@ -920,6 +913,10 @@ jRCT URL：${h(r.url||'')}</div>
   });
   document.getElementById('downloadCsvBtn')?.addEventListener('click', downloadCsvFromRequests);
   document.getElementById('downloadZipBtn')?.addEventListener('click', downloadFolderZip);
+  document.getElementById('csvAppendLoadBtn')?.addEventListener('click',()=>{document.getElementById('csvAppendInput')?.click();});
+  document.getElementById('csvAppendInput')?.addEventListener('change', handleAppendCsvLoad);
+  setupDropZone('csvAppendDropZone','csvAppendInput');
+  document.getElementById('appendDataBtn')?.addEventListener('click', appendCurrentRowsToLoadedCsv);
   document.getElementById('mailDraftCreateBtn')?.addEventListener('click',()=>{
     resetMailEdits();
     const draft=emailDraft();
