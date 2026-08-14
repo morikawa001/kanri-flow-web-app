@@ -237,6 +237,7 @@
 <table class="progress-table" id="progressTable">
 <thead>
 <tr>
+<th style="width:36px"><input type="checkbox" id="selectAllProgress" title="すべて選択" aria-label="すべて選択"></th>
 <th>報告区分</th>
 <th>起案番号</th>
 <th>起案日</th>
@@ -376,6 +377,25 @@ if(!files.length)return;
 processCsvFiles(files);
 });
 
+// 行選択チェックボックス（イベント委譲）
+progressTableBody.addEventListener('change',function(e){
+var cb=e.target;
+if(!(cb.classList&&cb.classList.contains('progress-row-check')))return;
+toggleProgressRow(+cb.dataset.rowIndex,cb.checked);
+// ヘッダーの全選択チェックを同期
+var boxes=progressTableBody.querySelectorAll('.progress-row-check');
+var allChecked=boxes.length>0&&Array.from(boxes).every(function(b){return b.checked;});
+var selAll=document.getElementById('selectAllProgress');
+if(selAll)selAll.checked=allChecked;
+});
+
+// 全選択／全解除
+document.getElementById('selectAllProgress').addEventListener('change',function(){
+var checked=this.checked;
+setAllProgressRows(checked);
+progressTableBody.querySelectorAll('.progress-row-check').forEach(function(b){b.checked=checked;});
+});
+
 // ============================================================
 // CSVファイルの読み込み処理（ボタン選択・ドラッグ&ドロップ共通）
 // ============================================================
@@ -383,8 +403,12 @@ function processCsvFiles(files){
 csvStatus.textContent='読み込み中...';
 progressTableBody.innerHTML='';
 var loadedCount=0;
-var sessionHeaders=null;
-var sessionRows=[];
+sessionHeaders=null;
+sessionRows=[];
+selectedProgressRows={};
+globalRowIndex=0;
+var selAll=document.getElementById('selectAllProgress');
+if(selAll)selAll.checked=false;
 
 Array.from(files).forEach(function(file){
 var reader=new FileReader();
@@ -400,29 +424,65 @@ var headers=rows[0];
 for(var i=1;i<rows.length;i++){
 if(rows[i].length>=3){
 console.log('Row',i,':',rows[i]);
-var tr=createProgressRow(rows[i],headers);
+var tr=createProgressRow(rows[i],headers,globalRowIndex);
 progressTableBody.appendChild(tr);
 // apply/publishへ引き継ぐためにヘッダー付きオブジェクト行を蓄積
 if(!sessionHeaders)sessionHeaders=headers;
 var obj={};
 headers.forEach(function(h,k){obj[h]=rows[i][k]||'';});
 sessionRows.push(obj);
+globalRowIndex++;
 }
 }
 loadedCount++;
 if(loadedCount===files.length){
-csvStatus.textContent=files.length+'件のファイルを読み込みました';
 progressTableWrap.style.display='block';
 csvEmpty.style.display='none';
-// 手続きページ（apply/publish）へ引き継ぐためsessionStorageに保存
-if(sessionHeaders&&sessionRows.length){
-saveLedgerToSession({headers:sessionHeaders,rows:sessionRows});
-csvStatus.textContent=files.length+'件のファイルを読み込みました（'+sessionRows.length+'行を引き継ぎ可能）';
-}
+carryProgressSelection();
 }
 };
 reader.readAsText(file,'UTF-8');
 });
+}
+
+// ============================================================
+// 進捗表の行選択（選択した行だけをapply/publishへ引き継ぐ）
+// ============================================================
+var sessionHeaders=null;
+var sessionRows=[];
+var selectedProgressRows={};
+var globalRowIndex=0;
+
+// 選択状態をsessionStorageへ反映（未選択の場合は全行を引き継ぐ）
+function carryProgressSelection(){
+if(!sessionHeaders||!sessionRows.length){
+csvStatus.textContent='読み込んだデータがありません';
+return;
+}
+var selected=sessionRows.filter(function(_,i){return selectedProgressRows[i];});
+var toCarry=selected.length?selected:sessionRows;
+saveLedgerToSession({headers:sessionHeaders,rows:toCarry});
+if(selected.length){
+csvStatus.textContent=sessionRows.length+'行のうち、選択した '+selected.length+' 行を引き継ぎ対象にしました。';
+}else{
+csvStatus.textContent=sessionRows.length+'行を読み込みました（引き継ぎ対象）。行を選択すると選択した行だけが引き継がれます。';
+}
+}
+
+// 1行の選択をトグル
+function toggleProgressRow(index,checked){
+if(checked)selectedProgressRows[index]=true;
+else delete selectedProgressRows[index];
+carryProgressSelection();
+}
+
+// 全行の選択／解除
+function setAllProgressRows(checked){
+sessionRows.forEach(function(_,i){
+if(checked)selectedProgressRows[i]=true;
+else delete selectedProgressRows[i];
+});
+carryProgressSelection();
 }
 
 // ============================================================
@@ -525,7 +585,7 @@ if(h===n||h.indexOf(n)!==-1||n.indexOf(h)!==-1)return i;
 return -1;
 }
 
-function createProgressRow(data,headers){
+function createProgressRow(data,headers,rowIndex){
 var tr=document.createElement('tr');
 
 // ヘッダーから各カラムのインデックスを検索
@@ -550,7 +610,8 @@ var manager=idxManager>=0?(data[idxManager]||''):'';
 var statusClass=getStatusClass(status);
 var progress=getProgressPercent(status);
 
-tr.innerHTML='<td>'+report+'</td>'+
+tr.innerHTML='<td><input type="checkbox" class="progress-row-check" data-row-index="'+rowIndex+'" title="この行を引き継ぎ対象にする"></td>'+
+'<td>'+report+'</td>'+
 '<td>'+no+'</td>'+
 '<td>'+date+'</td>'+
 '<td>'+person+'</td>'+
