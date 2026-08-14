@@ -89,7 +89,7 @@ function csvFromRequests() {
   var isApply = pageMode === 'apply';
   var header = ['起案日','元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
   if (isApply) header.splice(header.indexOf('公表日') + 1, 0, '承認日');
-  if (isApply) header.push('申請内容','備考','申請内容チェック');
+  if (isApply) header.push('申請内容','備考','申請内容チェック','審査依頼書添付資料');
   var mailDraft = getMailDraftRecord();
   var drafter = getValue('drafterName') || '';
   var studyTitle = getValue('studyTitle') || '';
@@ -125,7 +125,7 @@ function csvFromRequests() {
       state.stepDurations['intake'] || 0, state.stepDurations['folders'] || 0, state.stepDurations['drafts'] || 0,
       state.stepDurations['files'] || 0, state.stepDurations['work'] || 0, state.stepDurations['path'] || 0, state.stepDurations['send'] || 0,
       mailDraft.subject, mailDraft.body);
-    if (pageMode === 'apply') rowArr.push(r.content || '', r.notes || '', contentCheckToCsv(idx));
+    if (pageMode === 'apply') rowArr.push(r.content || '', r.notes || '', contentCheckToCsv(idx), state.attachmentInputRaw || '');
     return rowArr.map(csvEscape).join(',');
   }).join('\n');
   return header.map(csvEscape).join(',') + '\n' + body;
@@ -275,6 +275,11 @@ function handleCsvLoadFromFile(ev) {
       if (first['研究責任者2職名']) state.managerTitle2 = first['研究責任者2職名'];
       if (first['起案日']) state.draftDate = normalizeToYmdSlash(first['起案日']);
       if (first['管理者報告メール送信日']) state.sendDate = first['管理者報告メール送信日'];
+      // 審査依頼書_添付資料の復元（apply専用）
+      if (pageMode === 'apply' && first['審査依頼書添付資料']) {
+        state.attachmentInputRaw = first['審査依頼書添付資料'];
+        state.attachmentData = state.attachmentInputRaw.split(/[,、，:：;；\s\u3000]+/).map(function(x){return x.trim();}).filter(Boolean);
+      }
       state.managerPaths = parsed.rows.map(function(r) { return r['管理者側フォルダパス'] || ''; });
       restoreMailFromLedger(first);
       var cnt = parsed.rows.length;
@@ -315,6 +320,11 @@ function handleLedgerLoadForBack(ev) {
       state.loadedLedgerRows = parsed.rows;
       state.selectedLedgerIndexes = parsed.rows.map(function(_, i) { return i; });
       state.managerPaths = parsed.rows.map(function(r) { return r['管理者側フォルダパス'] || ''; });
+      // 審査依頼書_添付資料の復元（apply専用）
+      if (pageMode === 'apply' && parsed.rows[0]['審査依頼書添付資料']) {
+        state.attachmentInputRaw = parsed.rows[0]['審査依頼書添付資料'];
+        state.attachmentData = state.attachmentInputRaw.split(/[,、，:：;；\s\u3000]+/).map(function(x){return x.trim();}).filter(Boolean);
+      }
       restoreMailFromLedger(parsed.rows[0]);
       syncRequestRowsFromSelectedLedger();
       fileStatuses.csvStep5 = '✅ 台帳CSV／Excelを読み込みました。対象行を選択してください。';
@@ -393,6 +403,7 @@ function ledgerCsvForDownload() {
     if (!headers.includes('申請内容')) headers.push('申請内容');
     if (!headers.includes('備考')) headers.push('備考');
     if (!headers.includes('申請内容チェック')) headers.push('申請内容チェック');
+    if (!headers.includes('審査依頼書添付資料')) headers.push('審査依頼書添付資料');
   }
 
   var sendDate = getValue('sendDate') || '';
@@ -485,6 +496,7 @@ function ledgerCsvForDownload() {
       obj['申請内容'] = curRow.content || '';
       obj['備考'] = curRow.notes || '';
       obj['申請内容チェック'] = contentCheckToCsv(idx);
+      obj['審査依頼書添付資料'] = state.attachmentInputRaw || '';
     }
     return obj;
   });
