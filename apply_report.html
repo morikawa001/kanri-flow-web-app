@@ -508,10 +508,17 @@ ${stage.id==='intake'
   return `<label class="row-pick ${checked?'selected':''}">
 <input type="checkbox" data-session-ledger-row="${i}" ${checked?'checked':''}>
 <div class="row-pick-main">
-<strong>行${i+1}：${h(r['起案番号']||r['研究課題名']||'')}</strong>
-<span>報告区分：${h(r['報告区分']||'')}</span>
-<span>ステータス：${h(r['ステータス']||'')}</span>
-<span>公表日：${h(r['公表日']||'')}</span>
+<strong>行${i+1}：${h(r['起案番号']||'')} ／ ${h(r['報告区分']||'')}</strong>
+<div class="row-pick-grid">
+<span class="rp-item"><em>起案日</em><b>${h(r['起案日']||'—')}</b></span>
+<span class="rp-item"><em>公表日</em><b>${h(r['公表日']||'—')}</b></span>
+<span class="rp-item"><em>承認日</em><b>${h(r['承認日']||'—')}</b></span>
+<span class="rp-item"><em>jRCT番号</em><b>${h(r['jRCT番号']||'—')}</b></span>
+<span class="rp-item"><em>研究課題名</em><b>${h(r['研究課題名']||'—')}</b></span>
+<span class="rp-item"><em>研究責任者</em><b>${h(r['研究責任者1氏名']||r['研究責任者']||'—')}</b></span>
+<span class="rp-item"><em>研究区分</em><b>${h(r['研究区分']||'—')}</b></span>
+<span class="rp-item"><em>研究略称</em><b>${h(r['研究略称']||'—')}</b></span>
+</div>
 </div>
 </label>`;
   }).join('')}</div>

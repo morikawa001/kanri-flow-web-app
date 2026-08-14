@@ -163,6 +163,10 @@ kbd{display:inline-block;padding:.15em .45em;font-size:.78em;font-family:ui-mono
 .row-pick-main{flex:1 1 auto;min-width:0}
 .row-pick-main strong{display:block;font-size:.8rem;margin-bottom:.1rem;font-weight:600}
 .row-pick-main span{display:block;font-size:.72rem;color:var(--muted);line-height:1.4}
+.row-pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.2rem .9rem;margin-top:.35rem}
+.row-pick-grid .rp-item{display:flex;gap:.4rem;align-items:baseline;font-size:.72rem;line-height:1.5;min-width:0;color:var(--text)}
+.row-pick-grid .rp-item em{font-style:normal;color:var(--faint);white-space:nowrap;flex:0 0 auto}
+.row-pick-grid .rp-item b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* 成功バナー */
 .success-banner{padding:2.5rem 1.5rem;text-align:center;background:linear-gradient(135deg,var(--success-soft),var(--surface-2));border:1px solid var(--success);border-radius:var(--r-2xl);box-shadow:0 4px 20px var(--success-glow)}
