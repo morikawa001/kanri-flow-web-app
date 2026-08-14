@@ -464,20 +464,20 @@ ${(()=>{
 ${notesHtml?`<div class="note-list" style="margin-bottom:.75rem">${notesHtml}</div>`:''}
 ${stage.id==='intake'
   ? `<div class="template-card" style="margin-bottom:.75rem">
-<div class="help" style="margin-bottom:.6rem">JRCTページ（<code>jrct.mhlw.go.jp</code>）の内容をコピー＆貼り付けて、研究課題名・研究責任者などを自動入力します。<br>手順：JRCTページで <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
-<textarea class="textarea" id="jrctHtmlInput" placeholder="JRCTページのHTMLをここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
-<div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-<button type="button" class="primary-btn" id="jrctParseBtn">貼り付けて自動入力</button>
-<span class="help" id="jrctParseStatus"></span>
-</div>
-</div>
-<div class="template-card" style="margin-bottom:.75rem">
 <div class="help" style="margin-bottom:.6rem">以前保存した台帳CSV・Excelを読み込むと、研究課題名・研究責任者・研究区分・研究略称・依頼行などを自動復元し、続きから再開できます。</div>
 <div id="csvDropZoneStep1" class="csv-dropzone" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
 <label class="ghost-btn" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">台帳CSV・Excelを読み込む<input type="file" id="csvInputStep1" accept=".csv,.xlsx,.xls" style="display:none" multiple></label>
 <span class="help" id="csvStatusStep1"></span>
 </div>
 <div class="help" style="margin-top:.4rem">または、台帳CSV・Excelファイルをこの枠内へドラッグ＆ドロップでも読み込めます。</div>
+</div>
+<div class="template-card" style="margin-bottom:.75rem">
+<div class="help" style="margin-bottom:.6rem">JRCTページ（<code>jrct.mhlw.go.jp</code>）の内容をコピー＆貼り付けて、研究課題名・研究責任者などを自動入力します。<br>手順：JRCTページで <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
+<textarea class="textarea" id="jrctHtmlInput" placeholder="JRCTページのHTMLをここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
+<div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+<button type="button" class="primary-btn" id="jrctParseBtn">貼り付けて自動入力</button>
+<span class="help" id="jrctParseStatus"></span>
+</div>
 </div>`:''}
 ${standardFields.length||managerHTML?`<div class="section-title">入力項目</div>`:''}
 ${standardFields.length?`<div class="grid-2">${fieldHTML}</div>`:''}
