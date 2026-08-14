@@ -58,9 +58,26 @@ function draftDateColumnName() {
   return pageMode === 'apply' ? '申請管理者報告_起案日' : '公表管理者報告_起案日';
 }
 
-// 行オブジェクトから起案日を取得（どのページの列名でも可・旧「起案日」にも対応）
+// 起案日2列（左=申請管理者報告_起案日 / 右=公表管理者報告_起案日）
+var APPLY_DRAFT_DATE_COL = '申請管理者報告_起案日';
+var PUBLISH_DRAFT_DATE_COL = '公表管理者報告_起案日';
+
+// 行オブジェクトから現在ページの起案日を取得（旧「起案日」にも対応）
 function rowDraftDate(r) {
-  return (r && (r['申請管理者報告_起案日'] || r['公表管理者報告_起案日'] || r['起案日'])) || '';
+  return (r && (r[draftDateColumnName()] || r['起案日'])) || '';
+}
+
+// ヘッダー配列に起案日2列（申請→公表の順）を確保する
+function ensureDraftDateColumns(headers) {
+  if (headers.indexOf(APPLY_DRAFT_DATE_COL) === -1 && headers.indexOf(PUBLISH_DRAFT_DATE_COL) === -1) {
+    headers.unshift(PUBLISH_DRAFT_DATE_COL);
+    headers.unshift(APPLY_DRAFT_DATE_COL);
+  } else if (headers.indexOf(APPLY_DRAFT_DATE_COL) === -1) {
+    headers.splice(headers.indexOf(PUBLISH_DRAFT_DATE_COL), 0, APPLY_DRAFT_DATE_COL);
+  } else if (headers.indexOf(PUBLISH_DRAFT_DATE_COL) === -1) {
+    headers.splice(headers.indexOf(APPLY_DRAFT_DATE_COL) + 1, 0, PUBLISH_DRAFT_DATE_COL);
+  }
+  return headers;
 }
 
 // 申請内容チェックパネルの状態をCSV保存用のJSON文字列へ（apply専用）
@@ -97,7 +114,7 @@ function contentCheckFromCsv(text, rowIdx) {
 function csvFromRequests() {
   var rows = requestRowsData();
   var isApply = pageMode === 'apply';
-  var header = [draftDateColumnName(),'元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
+  var header = ['申請管理者報告_起案日','公表管理者報告_起案日','元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
   if (isApply) header.splice(header.indexOf('公表日') + 1, 0, '承認日');
   if (isApply) header.push('申請内容','備考','申請内容チェック','審査依頼書添付資料');
   var mailDraft = getMailDraftRecord();
@@ -122,7 +139,7 @@ function csvFromRequests() {
   var draftDate = normalizeToYmdSlash(state.draftDate || todayFormatted());
   var body = rows.map(function(r, idx) {
     var rowArr = [
-      draftDate, r.base || '', requestOutputNo(r), r.type, drafter, getValue('drafterDept') || '', status,
+      isApply ? draftDate : '', isApply ? '' : draftDate, r.base || '', requestOutputNo(r), r.type, drafter, getValue('drafterDept') || '', status,
       r.type === '定期報告' ? '' : normalizeToYmdSlash(r.date || '')
     ];
     if (pageMode === 'apply') rowArr.push(r.approval || '');
@@ -378,8 +395,8 @@ function clearLedgerRowSelection() {
 function ledgerCsvForDownload() {
   var headers = state.loadedLedgerHeaders.length
     ? state.loadedLedgerHeaders.slice()
-    : [draftDateColumnName(),'起案番号','報告区分','担当者','ステータス','公表日','jRCT URL','元の起案番号','研究課題名','研究責任者'];
-  if (!headers.includes(draftDateColumnName())) headers.unshift(draftDateColumnName());
+    : ['申請管理者報告_起案日','公表管理者報告_起案日','起案番号','報告区分','担当者','ステータス','公表日','jRCT URL','元の起案番号','研究課題名','研究責任者'];
+  ensureDraftDateColumns(headers);
   if (!headers.includes('研究課題名')) headers.push('研究課題名');
   if (!headers.includes('研究責任者')) headers.push('研究責任者');
   if (!headers.includes('ステータス')) headers.push('ステータス');

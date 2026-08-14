@@ -96,7 +96,7 @@ html[data-theme="dark"] body.page-apply{
 <script>var pageMode = 'apply';</script>
 <script src="common.js?v=20260811"></script>
 <script src="common-flow.js?v=20260815"></script>
-<script src="common-csv.js?v=20260817"></script>
+<script src="common-csv.js?v=20260818"></script>
 <script src="common-docx.js?v=20260816"></script>
 <script src="common-ui.js?v=20260815"></script>
 <script src="state.js?v=20260817"></script>
@@ -510,7 +510,7 @@ ${stage.id==='intake'
 <div class="row-pick-main">
 <strong>行${i+1}：${h(r['起案番号']||'')} ／ ${h(r['報告区分']||'')}</strong>
 <div class="row-pick-grid">
-<span class="rp-item"><em>申請管理者報告_起案日</em><b>${h(rowDraftDate(r)||'—')}</b></span>
+<span class="rp-item"><em>申請管理者報告_起案日</em><b>${h(r['申請管理者報告_起案日']||r['起案日']||'—')}</b></span>
 <span class="rp-item"><em>公表日</em><b>${h(r['公表日']||'—')}</b></span>
 <span class="rp-item"><em>承認日</em><b>${h(r['承認日']||'—')}</b></span>
 <span class="rp-item"><em>jRCT番号</em><b>${h(r['jRCT番号']||'—')}</b></span>
