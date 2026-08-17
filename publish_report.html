@@ -637,10 +637,16 @@ function validateIntakeRequired(){
     if(!mark(free,bad)) ok=false;
     return !bad;
   }
-  // 研究略称・研究課題名・jRCT番号・起案・報告案の報告者
-  ['mailSubject','studyTitle','jrctNo','drafterName'].forEach(function(id){
+  // jRCT関連項目の要否：初回公表・変更・軽微変更・届出外の依頼が1つでもある場合のみ必須
+  const jrctRequiredTypes=['初回公表','変更','軽微変更','届出外'];
+  const reqRows=(state.requestRows||[]);
+  const needJRCT=reqRows.some(function(r){return jrctRequiredTypes.indexOf(r.type)!==-1;});
+  // 研究略称・研究課題名・起案・報告案の報告者
+  ['mailSubject','studyTitle','drafterName'].forEach(function(id){
     checkState(id, document.getElementById(id));
   });
+  // jRCT番号：初回公表・変更・軽微変更・届出外の依頼がある場合のみ必須
+  if(needJRCT) checkState('jrctNo', document.getElementById('jrctNo'));
   checkPresetField('drafterDept'); // 所属・部門名（プルダウン選択式）
   // 研究区分（特定／非特定のいずれか必須）
   const hasStudyType=!!state.studyTypeSpecific||!!state.studyTypeNonspecific;
@@ -648,10 +654,12 @@ function validateIntakeRequired(){
   // 研究責任者1行目（所属機関・氏名）
   checkPresetField('managerAffil1'); // 所属機関（プルダウン選択式）
   checkState('managerName1', document.getElementById('managerName1'));
-  // jRCT URL（全依頼行の入力欄）
+  // jRCT URL（初回公表・変更・軽微変更・届出外の依頼行のみ必須）
   const urlFields=document.querySelectorAll('[data-r-url]');
   if(urlFields.length){
     urlFields.forEach(function(el){
+      const row=reqRows[+el.dataset.rUrl];
+      if(row && jrctRequiredTypes.indexOf(row.type)===-1) return;
       if(!mark(el, !String(el.value||'').trim())) ok=false;
     });
   }
