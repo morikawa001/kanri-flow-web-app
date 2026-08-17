@@ -508,8 +508,8 @@ ${stage.id==='intake'
 <div class="help" style="margin-top:.4rem">または、台帳CSV・Excelファイルをこの枠内へドラッグ＆ドロップでも読み込めます。</div>
 </div>
 <div class="template-card" style="margin-bottom:.75rem">
-<div class="help" style="margin-bottom:.6rem">管理者報告書（臨床研究法における管理者への報告書）またはJRCTページ（<code>jrct.mhlw.go.jp</code>）の内容をコピー＆貼り付けて、研究課題名・研究の種別・研究責任者・依頼行（報告区分・公表日・URL）などを自動入力します。<br>手順：対象の文書で <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
-<textarea class="textarea" id="jrctHtmlInput" placeholder="管理者報告書またはJRCTページの内容をここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
+<div class="help" style="margin-bottom:.6rem">管理者報告書（臨床研究法における管理者への報告書）・実施承認申請（管理者承認様式）またはJRCTページ（<code>jrct.mhlw.go.jp</code>）の内容をコピー＆貼り付けて、研究課題名・研究の種別・研究責任者・依頼行（報告区分・公表日・URL）などを自動入力します。<br>手順：対象の文書で <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
+<textarea class="textarea" id="jrctHtmlInput" placeholder="管理者報告書・実施承認申請またはJRCTページの内容をここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
 <div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
 <button type="button" class="primary-btn" id="jrctParseBtn">貼り付けて自動入力</button>
 <span class="help" id="jrctParseStatus"></span>
@@ -556,7 +556,7 @@ ${generatedHTML}
       const input=document.getElementById('jrctHtmlInput');
       const html=input?.value?.trim();
       if(!html){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='テキストエリアに管理者報告書またはJRCTページの内容を貼り付けてください。';s.style.color='var(--warn)';}return;}
-      if(!html.includes('jRCT')&&!html.includes('臨床研究')&&!html.includes('管理者への報告書')){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='管理者報告書またはJRCTページの内容が見つかりません。正しい内容をコピーしてください。';s.style.color='var(--error)';}return;}
+      if(!html.includes('jRCT')&&!html.includes('臨床研究')&&!html.includes('管理者への報告書')&&!html.includes('実施承認申請')&&!html.includes('管理者承認様式')&&!html.includes('研究責任医師')){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='管理者報告書またはJRCTページ・実施承認申請の内容が見つかりません。正しい内容をコピーしてください。';s.style.color='var(--error)';}return;}
       try{
         const data=parseJRCTHtml(html);
         const filled=Object.values(data).filter(Boolean).length;
@@ -1277,6 +1277,59 @@ function parseJRCTHtml(input){
       return rows;
     })();
   }
+  // 実施承認申請（管理者承認様式）形式の解析（管理者報告書との誤判定を避けるため専用キーワードで限定）
+  if(text.includes('実施承認申請')||text.includes('管理者承認様式')||(text.includes('研究責任医師')&&text.includes('申請致します'))){
+    // 研究課題名
+    const titleVal=findVal('研究課題名');
+    if(titleVal&&!titleVal.includes('{{')) data.studyTitle=titleVal;
+    // 研究責任医師（診療科・職名・氏名）
+    const piLine=findVal('研究責任医師');
+    if(piLine){
+      const piParts=piLine.split(/[\s\u3000]+/).filter(Boolean);
+      if(piParts.length>=1&&!piParts[0].includes('診療科')) data.managerDept1=piParts[0];
+      if(piParts.length>=2&&!piParts[1].includes('職名')) data.managerTitle1=piParts[1];
+      if(piParts.length>=3&&!piParts.slice(2).join(' ').includes('氏名')) data.managerName1=piParts.slice(2).join(' ');
+    }
+    // 研究の種別（チェック欄の有無で特定／非特定・未承認適応外・資金提供を判定）
+    const typeBlock=findBlock('研究の種別',['申請内容','審査結果','備考']);
+    if(typeBlock.length){
+      const typeText=typeBlock.join('\n');
+      const sp=checkedItem(typeText,'特定臨床研究');
+      if(sp!==undefined) data.isSpecific=sp;
+      const ns=checkedItem(typeText,'非特定臨床研究');
+      if(ns!==undefined) data.isNonspecific=ns;
+      const ua=checkedItem(typeText,'未承認・適応外');
+      if(ua!==undefined) data.isUnapproved=ua;
+      const fd=checkedItem(typeText,'資金提供');
+      if(fd!==undefined) data.isFunding=fd;
+    }
+    // 管理番号（元の起案番号）
+    const kanriNo=findVal('管理番号');
+    if(kanriNo&&/^特/.test(kanriNo.trim())) data.base=kanriNo.trim();
+    // 申請内容（チェックマーク基準で報告区分を生成：新規申請→初回公表、変更→変更、軽微→軽微変更、届出外→届出外）
+    const appBlock=findBlock('申請内容',['審査結果','備考']);
+    if(appBlock.length){
+      const appText=appBlock.join('\n');
+      const chkOf=function(kw){const re=new RegExp('([■☑☒□])\\s*'+kw);const m=appText.match(re);return m?/[■☑☒]/.test(m[1]):undefined;};
+      const newChk=chkOf('新規申請');
+      const chgChk=chkOf('変更申請');
+      const chgChgChk=chkOf('変更(?=[（(])');
+      const chgMinorChk=chkOf('軽微');
+      const chgExChk=chkOf('届出外');
+      const subDate=function(kw){const re=new RegExp(kw+'\\s*[（(]\\s*([^）)]*)[）)]');const m=appText.match(re);return m?convertDateBlock(m[1]):'';};
+      const rows=[];
+      if(newChk===true) rows.push({type:'初回公表',date:subDate('新規申請'),url:''});
+      if(chgChk===true){
+        if(chgChgChk===true) rows.push({type:'変更',date:subDate('変更'),url:''});
+        if(chgMinorChk===true) rows.push({type:'軽微変更',date:subDate('軽微'),url:''});
+        if(chgExChk===true) rows.push({type:'届出外',date:subDate('届出外'),url:''});
+      }
+      if(rows.length) data.reportTypes=(data.reportTypes||[]).concat(rows);
+    }
+    // 備考
+    const notesBlock=findBlock('備考',['決定通知書','別紙','参考様式','実施承認申請に関する']);
+    if(notesBlock.length) data.notes=notesBlock.join('\n').replace(/^[\s\u3000：:]+/,'').trim();
+  }
   data.jrctUrl=(data.jrctNo||'')?'https://jrct.mhlw.go.jp/latest-detail/'+(data.jrctNo||''):'';
   return data;
 }
@@ -1336,12 +1389,17 @@ function applyJRCTData(data){
   if(data.jrctUrl&&state.requestRows&&state.requestRows[0]){
     state.requestRows[0].url=data.jrctUrl;
   }
-  // 管理者報告書の報告事項から依頼行を生成（報告区分・公表日・URL・施設情報）
+  // 管理者報告書・実施承認申請の報告事項から依頼行を生成（報告区分・公表日・URL・施設情報）
   if(data.reportTypes&&data.reportTypes.length){
-    const baseNo=(state.requestRows&&state.requestRows.length&&state.requestRows[0].base)||'特2025-17_2-1';
+    const baseNo=data.base||(state.requestRows&&state.requestRows.length&&state.requestRows[0].base)||'特2025-17_2-1';
     state.requestRows=data.reportTypes.map(function(rt){
-      return {type:rt.type,base:baseNo,date:rt.date||'',url:rt.url||'',facilityType:rt.facilityType||'',facilityDetail:rt.facilityDetail||'',content:'',notes:''};
+      return {type:rt.type,base:baseNo,date:rt.date||'',url:rt.url||'',facilityType:rt.facilityType||'',facilityDetail:rt.facilityDetail||'',content:'',notes:data.notes||''};
     });
+  }else if(data.base||data.notes){
+    if(state.requestRows&&state.requestRows[0]){
+      if(data.base) state.requestRows[0].base=data.base;
+      if(data.notes) state.requestRows[0].notes=data.notes;
+    }
   }
   renderAll();
 }
@@ -1349,8 +1407,8 @@ const ASSIST_DATA = {
   intake:{
     title:'こんにちは！入力をサポートします',
     steps:[
-      'まず、jRCTのページまたは管理者報告書（臨床研究法における管理者への報告書）を開いてください。文書内のテキストをすべて選択（Ctrl+A）してコピー（Ctrl+C）します。',
-      '次に、下の「管理者報告書またはJRCTページの内容をここに貼り付けてください」と書かれた枠の中に貼り付け（Ctrl+V）ます。',
+      'まず、jRCTのページ・管理者報告書（臨床研究法における管理者への報告書）または実施承認申請（管理者承認様式）を開いてください。文書内のテキストをすべて選択（Ctrl+A）してコピー（Ctrl+C）します。',
+      '次に、下の「管理者報告書・実施承認申請またはJRCTページの内容をここに貼り付けてください」と書かれた枠の中に貼り付け（Ctrl+V）ます。',
       '「貼り付けて自動入力」ボタンを押すと、研究課題名・研究の種別・研究責任者・依頼行（報告区分・公表日・URL）が自動で入力されます。',
       '残りの項目（研究略称、研究区分、起案者名など）を確認して入力してください。',
       '画面下部の「複数依頼の同時入力」エリアで、報告区分と元の起案番号を設定します。'
