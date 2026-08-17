@@ -508,8 +508,8 @@ ${stage.id==='intake'
 <div class="help" style="margin-top:.4rem">または、台帳CSV・Excelファイルをこの枠内へドラッグ＆ドロップでも読み込めます。</div>
 </div>
 <div class="template-card" style="margin-bottom:.75rem">
-<div class="help" style="margin-bottom:.6rem">JRCTページ（<code>jrct.mhlw.go.jp</code>）の内容をコピー＆貼り付けて、研究課題名・研究責任者などを自動入力します。<br>手順：JRCTページで <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
-<textarea class="textarea" id="jrctHtmlInput" placeholder="JRCTページのHTMLをここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
+<div class="help" style="margin-bottom:.6rem">管理者報告書（臨床研究法における管理者への報告書）またはJRCTページ（<code>jrct.mhlw.go.jp</code>）の内容をコピー＆貼り付けて、研究課題名・研究の種別・研究責任者・依頼行（報告区分・公表日・URL）などを自動入力します。<br>手順：対象の文書で <kbd>Ctrl+A</kbd> → <kbd>Ctrl+C</kbd> → 下に貼り付け → ボタンをクリック</div>
+<textarea class="textarea" id="jrctHtmlInput" placeholder="管理者報告書またはJRCTページの内容をここに貼り付けてください..." style="min-height:100px;font-size:.78rem"></textarea>
 <div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
 <button type="button" class="primary-btn" id="jrctParseBtn">貼り付けて自動入力</button>
 <span class="help" id="jrctParseStatus"></span>
@@ -555,8 +555,8 @@ ${generatedHTML}
     document.getElementById('jrctParseBtn')?.addEventListener('click',()=>{
       const input=document.getElementById('jrctHtmlInput');
       const html=input?.value?.trim();
-      if(!html){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='テキストエリアにJRCTページの内容を貼り付けてください。';s.style.color='var(--warn)';}return;}
-      if(!html.includes('jRCT')&&!html.includes('臨床研究')){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='JRCTページの内容が見つかりません。正しいページをコピーしてください。';s.style.color='var(--error)';}return;}
+      if(!html){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='テキストエリアに管理者報告書またはJRCTページの内容を貼り付けてください。';s.style.color='var(--warn)';}return;}
+      if(!html.includes('jRCT')&&!html.includes('臨床研究')&&!html.includes('管理者への報告書')){const s=document.getElementById('jrctParseStatus');if(s){s.textContent='管理者報告書またはJRCTページの内容が見つかりません。正しい内容をコピーしてください。';s.style.color='var(--error)';}return;}
       try{
         const data=parseJRCTHtml(html);
         const filled=Object.values(data).filter(Boolean).length;
@@ -1096,6 +1096,49 @@ function parseJRCTHtml(input){
     }
     return results;
   }
+  // ラベルから開始するブロックを取得（終了ラベルまで）
+  function findBlock(label,endLabels){
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i];
+      if(!line.includes(label)) continue;
+      const block=[line.replace(label,'').replace(/^[\s\t：:　]+/,'')];
+      for(let j=i+1;j<lines.length;j++){
+        if(endLabels.some(L=>lines[j].includes(L))) break;
+        block.push(lines[j]);
+      }
+      return block;
+    }
+    return [];
+  }
+  // チェック欄（■☑☒＝チェック済み、□＝未チェック）を判定
+  function checkedItem(text,item){
+    const re=new RegExp('([■☑☒□])\\s*'+item);
+    const m=text.match(re);
+    if(!m) return undefined;
+    return /[■☑☒]/.test(m[1]);
+  }
+  // 日本語日付を y/m/d に変換
+  function convertDateBlock(text){
+    let m=text.match(/令和(\d+)年(\d+)月(\d+)日/);
+    if(m){const y=2018+parseInt(m[1]);return y+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}
+    m=text.match(/平成(\d+)年(\d+)月(\d+)日/);
+    if(m){const y=1988+parseInt(m[1]);return y+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}
+    m=text.match(/(\d{4})年(\d+)月(\d+)日/);
+    if(m) return m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');
+    m=text.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if(m) return m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');
+    return '';
+  }
+  // 報告期間（漢字）を y/m/d～y/m/d に変換
+  function convertRange(text){
+    let m=text.match(/令和(\d+)年(\d+)月(\d+)日から令和(\d+)年(\d+)月(\d+)日まで/);
+    if(m) return (2018+parseInt(m[1]))+'/'+m[2]+'/'+m[3]+'～'+(2018+parseInt(m[4]))+'/'+m[5]+'/'+m[6];
+    m=text.match(/(\d{4})年(\d+)月(\d+)日から(\d{4})年(\d+)月(\d+)日まで/);
+    if(m) return m[1]+'/'+m[2]+'/'+m[3]+'～'+m[4]+'/'+m[5]+'/'+m[6];
+    m=text.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})[～〜~-](\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if(m) return m[1]+'/'+m[2]+'/'+m[3]+'～'+m[4]+'/'+m[5]+'/'+m[6];
+    return '';
+  }
   data.mailSubject=findVal('平易な研究名称')||findVal('Public Title');
   data.studyTitle=findVal('研究名称')||findVal('Scientific Title');
   data.managerName1=(findVal('統括管理者の氏名')||'').replace(/\s{2,}/g,' ').replace(/^[\s\u3000]+|[\s\u3000]+$/g,'');
@@ -1127,7 +1170,114 @@ function parseJRCTHtml(input){
     if(m){const y=1988+parseInt(m[1]);data.pubDate=y+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}
     else{m=pubDateText.match(/(\d{4})年(\d+)月(\d+)日/);if(m) data.pubDate=m[1]+'/'+m[2].padStart(2,'0')+'/'+m[3].padStart(2,'0');}}
   }
-  data.jrctUrl='https://jrct.mhlw.go.jp/latest-detail/'+(data.jrctNo||'');
+  // 管理者報告書（臨床研究法における管理者への報告書）形式の解析
+  if(text.includes('管理者への報告書')||text.includes('研究における役割')){
+    // 研究課題名
+    const titleVal=findVal('研究課題名');
+    if(titleVal&&!titleVal.includes('{{')) data.studyTitle=titleVal;
+    // 研究の種別（チェック欄の有無で特定／非特定・未承認適応外・資金提供を判定）
+    const typeBlock=findBlock('研究の種別',['報告事項','詳細な内容','上記事項','実施中の研究']);
+    if(typeBlock.length){
+      const typeText=typeBlock.join('\n');
+      const sp=checkedItem(typeText,'特定臨床研究');
+      if(sp!==undefined) data.isSpecific=sp;
+      const ns=checkedItem(typeText,'非特定臨床研究');
+      if(ns!==undefined) data.isNonspecific=ns;
+      const ua=checkedItem(typeText,'未承認・適応外');
+      if(ua!==undefined) data.isUnapproved=ua;
+      const fd=checkedItem(typeText,'資金提供');
+      if(fd!==undefined) data.isFunding=fd;
+    }
+    // 研究責任医師の所属・職名・氏名
+    const roleIdx=lines.findIndex(l=>l.includes('研究における役割'));
+    if(roleIdx>=0){
+      for(let j=roleIdx+1;j<Math.min(roleIdx+6,lines.length);j++){
+        const line=lines[j];
+        let m=line.match(/^所[\s\u3000]*属[：:]?[\s\u3000]*(.+)$/);
+        if(m&&m[1].trim()&&!m[1].includes('{{')){data.managerDept1=m[1].trim();continue;}
+        m=line.match(/^職[\s\u3000]*名[：:]?[\s\u3000]*(.+)$/);
+        if(m&&m[1].trim()&&!m[1].includes('{{')){data.managerTitle1=m[1].trim();continue;}
+        m=line.match(/^氏[\s\u3000]*名[：:]?[\s\u3000]*(.+)$/);
+        if(m&&m[1].trim()&&!m[1].includes('{{')){data.managerName1=m[1].trim();continue;}
+      }
+    }
+    // 報告事項（依頼行の報告区分・公表日・URLを抽出）
+    data.reportTypes=(function(){
+      const rows=[];
+      const CHECKED=/[■☑☒✓]/;
+      const hasChecked=l=>CHECKED.test(l);
+      const grab=(text)=>{
+        const tm=text.match(/公表日[：:]?([^（()）\n]+)/);
+        const um=text.match(/[（(](https?:\/\/[^\s」）)]+)/);
+        return {date:tm?convertDateBlock(tm[1].trim()):'',url:um?um[1]:''};
+      };
+      const findLine=(kw,exclude)=>{
+        for(let i=0;i<lines.length;i++){
+          const l=lines[i];
+          if(!l.includes(kw)) continue;
+          if(exclude&&exclude.some(e=>l.includes(e))) continue;
+          if(!hasChecked(l)) continue;
+          return {line:l,next:lines[i+1]||''};
+        }
+        return null;
+      };
+      const addRow=(type,found,fType,fDetail)=>{
+        const g=grab((found.line||'')+' '+(found.next||''));
+        rows.push({type:type,date:g.date,url:g.url,facilityType:fType||'',facilityDetail:(fDetail||'').replace(/^[\s\u3000　]+|[\s\u3000　]+$/g,'')});
+      };
+      const newFound=findLine('新規');
+      if(newFound) addRow('初回公表',newFound);
+      const chgFound=findLine('変更',['軽微変更','届出外']);
+      if(chgFound) addRow('変更',chgFound);
+      const subFound=findLine('軽微変更');
+      if(subFound) addRow('軽微変更',subFound);
+      const todFound=findLine('届出外');
+      if(todFound) addRow('届出外',todFound);
+      // 疾病等報告又は不具合報告（医薬品・医療機器・再生医療等製品）
+      ['医薬品','医療機器','再生医療等製品'].forEach(function(p){
+        const pIdx=lines.findIndex(l=>l.includes(p)&&hasChecked(l));
+        if(pIdx<0) return;
+        const block=[lines[pIdx]];
+        for(let j=pIdx+1;j<lines.length;j++){
+          if(['医薬品','医療機器','再生医療等製品'].some(k=>lines[j].includes(k))) break;
+          block.push(lines[j]);
+        }
+        const bt=block.join('\n');
+        let facilityType='',detail='';
+        const sm=block[0].match(/([■☑☒✓])\s*自施設\s*(.*)$/);
+        if(sm&&CHECKED.test(sm[1])){facilityType='自施設';detail=sm[2];}
+        if(!facilityType){
+          const om=bt.match(/([■☑☒✓])\s*他施設\s*(.*)$/);
+          if(om&&CHECKED.test(om[1])){facilityType='他施設';detail=om[2];}
+        }
+        const g=grab(block[0]+' '+(block[1]||''));
+        rows.push({type:'疾病等報告（'+p+'）',date:g.date,url:g.url,facilityType:facilityType,facilityDetail:detail.replace(/^[\s\u3000　]+|[\s\u3000　]+$/g,'')});
+      });
+      // 不適合報告・通知・概要公表・審査意見
+      const unfit=findLine('不適合報告');
+      if(unfit) addRow('不適合報告',unfit);
+      const notify=findLine('主要評価項目報告書又は総括報告書及びその概要の通知');
+      if(notify) addRow('主要評価項目報告書等の通知',notify);
+      const outline=findLine('主要評価項目報告書又は総括報告書の概要の公表');
+      if(outline) addRow('主要評価項目報告書又は総括報告書の概要の公表',outline);
+      const opinion=findLine('審査意見の報告');
+      if(opinion) addRow('審査意見の報告',opinion);
+      // 定期報告・その他（上記以外のチェック済み行から判定）
+      const usedKeywords=['新規','変更','軽微変更','届出外','医薬品','医療機器','再生医療等製品','不適合報告','主要評価','概要の公表','審査意見'];
+      for(let i=0;i<lines.length;i++){
+        const l=lines[i];
+        if(!hasChecked(l)) continue;
+        if(usedKeywords.some(k=>l.includes(k))) continue;
+        if(l.includes('その他')){addRow('その他',{line:l,next:lines[i+1]||''});continue;}
+        if(/(?:から|まで|～|〜|報告期間|[0-9年月日\/\-]{8,})/.test(l)){
+          const range=convertRange(l)||convertDateBlock(l);
+          rows.push({type:'定期報告',date:range,url:'',facilityType:'',facilityDetail:''});
+        }
+      }
+      return rows;
+    })();
+  }
+  data.jrctUrl=(data.jrctNo||'')?'https://jrct.mhlw.go.jp/latest-detail/'+(data.jrctNo||''):'';
   return data;
 }
 function applyJRCTData(data){
@@ -1186,15 +1336,22 @@ function applyJRCTData(data){
   if(data.jrctUrl&&state.requestRows&&state.requestRows[0]){
     state.requestRows[0].url=data.jrctUrl;
   }
+  // 管理者報告書の報告事項から依頼行を生成（報告区分・公表日・URL・施設情報）
+  if(data.reportTypes&&data.reportTypes.length){
+    const baseNo=(state.requestRows&&state.requestRows.length&&state.requestRows[0].base)||'特2025-17_2-1';
+    state.requestRows=data.reportTypes.map(function(rt){
+      return {type:rt.type,base:baseNo,date:rt.date||'',url:rt.url||'',facilityType:rt.facilityType||'',facilityDetail:rt.facilityDetail||'',content:'',notes:''};
+    });
+  }
   renderAll();
 }
 const ASSIST_DATA = {
   intake:{
     title:'こんにちは！入力をサポートします',
     steps:[
-      'まず、jRCTのページを開いてください。ページ内のテキストをすべて選択（Ctrl+A）してコピー（Ctrl+C）します。',
-      '次に、下の「JRCTページの内容をここに貼り付けてください」と書かれた枠の中に貼り付け（Ctrl+V）ます。',
-      '「貼り付けて自動入力」ボタンを押すと、研究課題名や研究責任者が自動で入力されます。',
+      'まず、jRCTのページまたは管理者報告書（臨床研究法における管理者への報告書）を開いてください。文書内のテキストをすべて選択（Ctrl+A）してコピー（Ctrl+C）します。',
+      '次に、下の「管理者報告書またはJRCTページの内容をここに貼り付けてください」と書かれた枠の中に貼り付け（Ctrl+V）ます。',
+      '「貼り付けて自動入力」ボタンを押すと、研究課題名・研究の種別・研究責任者・依頼行（報告区分・公表日・URL）が自動で入力されます。',
       '残りの項目（研究略称、研究区分、起案者名など）を確認して入力してください。',
       '画面下部の「複数依頼の同時入力」エリアで、報告区分と元の起案番号を設定します。'
     ]
