@@ -574,7 +574,7 @@ function escapeRegex(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// docx条件分岐を前処理
+// docx条件分岐を前処理（タグが複数のw:tに分かれていても対応、publish側のみ（公表日：）を丸ごと非表示）
 function preprocessDocxForConditionals(buffer, data) {
   var zip = new PizZip(buffer);
   var xmlPaths = Object.keys(zip.files).filter(function(f) {
@@ -585,56 +585,112 @@ function preprocessDocxForConditionals(buffer, data) {
     .map(function(arr) { return arr[0]; });
   emptyKeys.forEach(function(k) { data[k] = null; });
   if (!emptyKeys.length) return buffer;
+  // apply側は従来通り（公表日：）を表示し続けるためpublishのみ処理
+  if ((typeof pageMode === 'undefined') || pageMode !== 'publish') return buffer;
 
-  function isInsideWT(xml, pos) {
-    var ltOpen = xml.lastIndexOf('<w:t', pos);
-    if (ltOpen === -1) return false;
-    var ltTagClose = xml.indexOf('>', ltOpen);
-    if (ltTagClose === -1 || pos < ltTagClose + 1) return false;
-    var ltEnd = xml.indexOf('</w:t>', ltTagClose);
-    if (ltEnd === -1) return false;
-    return pos < ltEnd;
+  // 実体参照を含む文字列を1文字ずつXML上のoffset付きで分割
+  function parseXmlTextChars(text) {
+    var entities = {
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&apos;': "'",
+      '&nbsp;': ' '
+    };
+    var res = [];
+    var i = 0;
+    while (i < text.length) {
+      var matched = null;
+      for (var e in entities) {
+        if (text.slice(i, i + e.length) === e) { matched = e; break; }
+      }
+      if (matched) {
+        res.push({ch: entities[matched], start: i, len: matched.length});
+        i += matched.length;
+      } else {
+        res.push({ch: text.charAt(i), start: i, len: 1});
+        i++;
+      }
+    }
+    return res;
   }
 
   var editsPerFile = {};
   xmlPaths.forEach(function(path) {
     var xml = zip.file(path).asText();
     var inserts = [];
-    for (var ki = 0; ki < emptyKeys.length; ki++) {
-      var key = emptyKeys[ki];
-      var tag = '{{' + key + '}}';
-      var pos = 0;
-      while (pos < xml.length) {
-        var tagIdx = xml.indexOf(tag, pos);
-        if (tagIdx === -1) break;
-        pos = tagIdx + tag.length;
 
-        var pOpen = xml.lastIndexOf('<w:p', tagIdx);
-        var pClose = xml.indexOf('</w:p>', tagIdx);
-        if (pOpen === -1 || pClose === -1) continue;
-
-        var leftParenIdx = -1;
-        for (var i = tagIdx - 1; i >= pOpen; i--) {
-          if (xml[i] === '\uFF09') break;
-          if (xml[i] === '\uFF08') { leftParenIdx = i; break; }
+    // 段落ごとにw:t文字列を連結し、各文字の絶対XML offsetを対応付ける
+    var pRe = /<w:p\b[^>]*>[\s\S]*?<\/w:p>/g;
+    var pm;
+    while ((pm = pRe.exec(xml)) !== null) {
+      var pXml = pm[0];
+      var pStart = pm.index;
+      var chars = []; // {ch:文字, start:絶対offset, len:XML上の長さ}
+      var runs = [];  // 各w:t {begin, end}（fallback用）
+      var tRe = /<w:t\b[^>]*?>([\s\S]*?)<\/w:t>/g;
+      var tm;
+      var openRe = /^<w:t\b[^>]*?>/;
+      while ((tm = tRe.exec(pXml)) !== null) {
+        var openTagLen = 0;
+        var om = openRe.exec(tm[0]);
+        if (om) openTagLen = om[0].length;
+        var contentBegin = pStart + tm.index + openTagLen;
+        var contentEnd = pStart + tm.index + tm[0].length - '</w:t>'.length;
+        runs.push({begin: contentBegin, end: contentEnd});
+        var local = parseXmlTextChars(tm[1]);
+        for (var li = 0; li < local.length; li++) {
+          chars.push({ch: local[li].ch, start: contentBegin + local[li].start, len: local[li].len});
         }
-        var rightParenIdx = -1;
-        for (var j = tagIdx + tag.length; j < pClose + 6; j++) {
-          if (xml[j] === '\uFF08') break;
-          if (xml[j] === '\uFF09') { rightParenIdx = j; break; }
-        }
+      }
+      if (!chars.length) continue;
 
-        if (leftParenIdx !== -1 && isInsideWT(xml, leftParenIdx) &&
-            rightParenIdx !== -1 && isInsideWT(xml, rightParenIdx)) {
-          inserts.push({pos: leftParenIdx, text: '{{#' + key + '}}'});
-          inserts.push({pos: rightParenIdx + 1, text: '{{/' + key + '}}'});
-        } else {
-          var tOpen = xml.lastIndexOf('<w:t', tagIdx);
-          var tClose = xml.indexOf('>', tOpen);
-          var tEnd = xml.indexOf('</w:t>', tagIdx);
-          if (tOpen !== -1 && tClose !== -1 && tEnd !== -1) {
-            inserts.push({pos: tClose + 1, text: '{{#' + key + '}}'});
-            inserts.push({pos: tEnd, text: '{{/' + key + '}}'});
+      var fullText = chars.map(function(c) { return c.ch; }).join('');
+
+      for (var ki = 0; ki < emptyKeys.length; ki++) {
+        var key = emptyKeys[ki];
+        var tag = '{{' + key + '}}';
+        var pos = 0;
+        while (pos < fullText.length) {
+          var tagIdx = fullText.indexOf(tag, pos);
+          if (tagIdx === -1) break;
+          pos = tagIdx + tag.length;
+
+          // 直前の（ ）を探す（）があれば途中の（は無視）
+          var leftParenIdx = -1;
+          for (var i = tagIdx - 1; i >= 0; i--) {
+            if (fullText.charAt(i) === '\uFF09') break;
+            if (fullText.charAt(i) === '\uFF08') { leftParenIdx = i; break; }
+          }
+          var rightParenIdx = -1;
+          for (var j = tagIdx + tag.length; j < fullText.length; j++) {
+            if (fullText.charAt(j) === '\uFF08') break;
+            if (fullText.charAt(j) === '\uFF09') { rightParenIdx = j; break; }
+          }
+
+          if (leftParenIdx !== -1 && rightParenIdx !== -1 &&
+              chars[leftParenIdx] && chars[rightParenIdx]) {
+            // （公表日：{{key}}）→ {{#key}}（公表日：{{key}}）{{/key}}
+            inserts.push({pos: chars[leftParenIdx].start, text: '{{#' + key + '}}'});
+            inserts.push({pos: chars[rightParenIdx].start + chars[rightParenIdx].len, text: '{{/' + key + '}}'});
+          } else {
+            // 括弧で囲われていない場合はタグを含むw:t全体を条件化（従来挙動の維持）
+            var firstC = chars[tagIdx];
+            var lastC = chars[tagIdx + tag.length - 1];
+            if (!firstC || !lastC) continue;
+            var repBegin = null;
+            var repEnd = null;
+            for (var r = 0; r < runs.length; r++) {
+              if (firstC.start >= runs[r].begin && firstC.start < runs[r].end &&
+                  (repBegin === null || runs[r].begin < repBegin)) repBegin = runs[r].begin;
+              if (lastC.start >= runs[r].begin && lastC.start < runs[r].end &&
+                  (repEnd === null || runs[r].end > repEnd)) repEnd = runs[r].end;
+            }
+            if (repBegin !== null && repEnd !== null) {
+              inserts.push({pos: repBegin, text: '{{#' + key + '}}'});
+              inserts.push({pos: repEnd, text: '{{/' + key + '}}'});
+            }
           }
         }
       }
@@ -648,10 +704,24 @@ function preprocessDocxForConditionals(buffer, data) {
     var inserts = editsPerFile[path];
     if (!inserts || !inserts.length) return;
     var xml = zip.file(path).asText();
-    inserts.sort(function(a, b) { return b.pos - a.pos; });
-    for (var idx = 0; idx < inserts.length; idx++) {
-      var ins = inserts[idx];
-      xml = xml.substring(0, ins.pos) + ins.text + xml.substring(ins.pos);
+
+    // 同じ位置に複数の挿入が重なった場合は1つにまとめる（閉じタグを開きタグより先に出す）
+    var byPos = {};
+    for (var ii = 0; ii < inserts.length; ii++) {
+      var ins = inserts[ii];
+      if (!byPos[ins.pos]) byPos[ins.pos] = [];
+      byPos[ins.pos].push(ins.text);
+    }
+    var posKeys = Object.keys(byPos).map(Number).sort(function(a, b) { return b - a; });
+    for (var pi = 0; pi < posKeys.length; pi++) {
+      var texts = byPos[posKeys[pi]];
+      texts.sort(function(a, b) {
+        if (a.indexOf('{{/') === 0 && b.indexOf('{{#') === 0) return -1;
+        if (a.indexOf('{{#') === 0 && b.indexOf('{{/') === 0) return 1;
+        return 0;
+      });
+      var combined = texts.join('');
+      xml = xml.substring(0, posKeys[pi]) + combined + xml.substring(posKeys[pi]);
     }
     zip.file(path, xml);
   });
