@@ -104,6 +104,16 @@ html[data-theme="dark"] body.page-apply{
 <script src="dates.js?v=20260815"></script>
 <script src="identifiers.js?v=20260819"></script>
 <script>
+// ステップ4のファイル名候補・必須資料をapply専用に上書き（変更区分）
+// 1.管理者報告様式(報告書)を削除 / 2.許可申請 / 3.審査依頼書 / 4.実施計画変更届 / 5.実施計画
+(function(){
+  NAMING_MASTER = NAMING_MASTER.filter(function(x){ return x.category !== '変更'; }).concat([
+    { category: '変更', source: '管理者報告様式_実施承認申請', pattern: ['特XXXX-XX-XXXX-X-2','公表','0.0','許可申請'], required: true, ext: 'docx' },
+    { category: '変更', source: '統一書式3_変更審査依頼書', pattern: ['特XXXX-XX-XXXX-X-2','公表','4.0','審査依頼書（収受印あり）'], required: true, ext: 'pdf' },
+    { category: '変更', source: '様式第二（第四十一条関係）_実施計画事項変更届書', pattern: ['特XXXX-XX-XXXX-X-2','公表','5.0','実施計画変更届'], required: true, ext: 'pdf' },
+    { category: '変更', source: '様式第一（第三十九条関係）_実施計画', pattern: ['特XXXX-XX-XXXX-X-2','公表','7.0','実施計画'], required: false, ext: 'pdf' }
+  ]);
+})();
 const stages = [
 {
 id:'intake',num:1,title:'案件受付・入口入力',
