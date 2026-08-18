@@ -275,7 +275,7 @@ function renderMain(){
       return `<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:.6rem">
 <div class="field"><label>${h(f.label)}</label>
 <div style="display:grid;gap:.35rem">
-<select class="input" data-preset-select="${f.id}" style="height:auto;padding:.45rem .6rem">
+<select class="input" data-preset-select="${f.id}">
 <option value="">選択してください</option>
 ${f.options.map(o=>`<option value="${h(o)}" ${currentVal===o?'selected':''}>${h(o)}</option>`).join('')}
 <option value="__free" ${!isPreset && currentVal ? 'selected':''}>自由記載</option>
@@ -289,7 +289,7 @@ ${next?`<div class="field"><label>${h(next.label)}</label>`+`<input type="text" 
       const isPreset = f.options.includes(currentVal);
       return `<div class="field"><label>${h(f.label)}</label>
 <div style="display:grid;gap:.35rem">
-<select class="input" data-preset-select="${f.id}" style="height:auto;padding:.45rem .6rem">
+<select class="input" data-preset-select="${f.id}">
 <option value="">選択してください</option>
 ${f.options.map(o=>`<option value="${h(o)}" ${currentVal===o?'selected':''}>${h(o)}</option>`).join('')}
 <option value="__free" ${!isPreset && currentVal ? 'selected':''}>自由記載</option>
@@ -337,7 +337,7 @@ ${f.options.map(o=>`<option value="${h(o)}" ${currentVal===o?'selected':''}>${h(
 <div class="grid-4">
 <div class="field"><label>所属機関</label>
 <div style="display:grid;gap:.35rem">
-<select class="input" data-preset-select="managerAffil1" style="height:auto;padding:.45rem .6rem">
+<select class="input" data-preset-select="managerAffil1">
 <option value="">選択してください</option>
 <option value="静岡県立静岡がんセンター" ${state.managerAffil1==='静岡県立静岡がんセンター'?'selected':''}>静岡県立静岡がんセンター</option>
 <option value="__free" ${(state.managerAffil1&&state.managerAffil1!=='静岡県立静岡がんセンター')?'selected':''}>自由記載</option>
