@@ -76,10 +76,10 @@ html[data-theme="dark"] body.page-publish{
 </div>
 <script>var pageMode = 'publish';</script>
 <script src="common.js?v=20260811"></script>
-<script src="common-flow.js?v=20260819"></script>
+<script src="common-flow.js?v=20260820"></script>
 <script src="common-csv.js?v=20260819"></script>
 <script src="common-docx.js?v=20260819"></script>
-<script src="common-ui.js?v=20260815"></script>
+<script src="common-ui.js?v=20260820"></script>
 <script>
 const stages = [
 {
@@ -221,7 +221,7 @@ const state = {
   loadedLedgerRows:[],
   loadedLedgerHeaders:[],
   selectedLedgerIndexes:[],
-  requestRows:[{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}],
+  requestRows:[{type:'',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}],
   managerPaths:[],
   assistSeen:{},
   stepEnterTimestamp:null,
@@ -1613,7 +1613,7 @@ function resetAll(){
   state.selectedLedgerIndexes=[];
   state.pendingLedgerFromSession=false;
   state.appendLoadedCsv=null;
-  state.requestRows=[{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}];
+  state.requestRows=[{type:'',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}];
   state.managerPaths=[];
   state.stepEnterTimestamp=null;
   state.stepDurations={};

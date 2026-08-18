@@ -41,14 +41,15 @@ function requestRowsData() {
   var rows = state.requestRows;
   return rows && rows.length
     ? rows
-    : [{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:''}];
+    : [{type: (pageMode === 'publish' ? '' : '初回公表'), base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: ''}];
 }
 
 // 依頼行のフィールドを設定
 function setRequestRow(idx, key, val) {
+  var defaultType = (pageMode === 'publish' ? '' : '初回公表');
   if (!state.requestRows || !state.requestRows.length)
-    state.requestRows = [{type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:'',content:'',notes:''}];
-  if (!state.requestRows[idx]) state.requestRows[idx] = {type:'初回公表',base:'特2025-17_2-1',date:'',url:'',facilityType:'',facilityDetail:'',content:'',notes:''};
+    state.requestRows = [{type: defaultType, base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
+  if (!state.requestRows[idx]) state.requestRows[idx] = {type: defaultType, base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''};
   state.requestRows[idx][key] = val;
 }
 

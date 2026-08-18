@@ -87,7 +87,7 @@ function renderRequestRows(hostOverride) {
   if (!hosts.length) return;
   var primaryHost = hostOverride || hosts[0];
   if (!state.requestRows || !state.requestRows.length)
-    state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
+    state.requestRows = [{type: (pageMode === 'publish' ? '' : '初回公表'), base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
   var requestHtml = requestRowsData().map(function(r, i) {
     var isPeriodic = r.type === '定期報告';
     var isApply = pageMode === 'apply';
@@ -114,6 +114,7 @@ function renderRequestRows(hostOverride) {
       '<div class="grid-2">' +
       '<div class="field"><label>報告区分</label>' +
       '<select class="select" data-r-type="' + i + '">' +
+      (pageMode === 'publish' ? '<option value=""' + (r.type ? '' : ' selected') + '>報告区分選択</option>' : '') +
       (pageMode === 'apply' ? ['新規申請','変更申請','その他'] : ['初回公表','変更','軽微変更','届出外','疾病等報告（医薬品）','疾病等報告（医療機器）','疾病等報告（再生医療等製品）','不適合報告','主要評価項目報告書等の通知','主要評価項目報告書又は総括報告書の概要の公表','審査意見の報告','定期報告','終了','その他']).map(function(opt) {
         return '<option ' + (reportTypeLabel(r.type) === opt ? 'selected' : '') + '>' + opt + '</option>';
       }).join('') +
@@ -158,7 +159,16 @@ function renderRequestRows(hostOverride) {
   primaryHost.querySelectorAll('[data-r-type]').forEach(function(el) {
     el.addEventListener('change', function() {
       var i = +el.dataset.rType;
-      setRequestRow(i, 'type', reportTypeFromLabel(el.value));
+      var newType = reportTypeFromLabel(el.value);
+      setRequestRow(i, 'type', newType);
+      // publish：初回公表を選択したら変更・軽微変更の依頼行を自動追加し、確認メッセージを表示
+      if (pageMode === 'publish' && newType === '初回公表') {
+        var types = (state.requestRows || []).map(function(x) { return x.type; });
+        var baseRef = (state.requestRows[i] && state.requestRows[i].base) || '特2025-17_2-1';
+        if (types.indexOf('変更') === -1) state.requestRows.push({type: '変更', base: baseRef, date: '', url: '', facilityType: '', facilityDetail: ''});
+        if (types.indexOf('軽微変更') === -1) state.requestRows.push({type: '軽微変更', base: baseRef, date: '', url: '', facilityType: '', facilityDetail: ''});
+        alert('変更と軽微変更の有無も確認すること');
+      }
       renderAll();
     });
   });
@@ -267,12 +277,12 @@ function renderRequestRows(hostOverride) {
       var i = +btn.dataset.remove;
       state.requestRows.splice(i, 1);
       if (!state.requestRows.length)
-        state.requestRows = [{type: '初回公表', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
+        state.requestRows = [{type: (pageMode === 'publish' ? '' : '初回公表'), base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
       renderAll();
     });
   });
   primaryHost.querySelector('#addRequestBtn')?.addEventListener('click', function() {
-    state.requestRows.push({type: '変更', base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''});
+    state.requestRows.push({type: (pageMode === 'publish' ? '' : '変更'), base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''});
     renderAll();
   });
 }
