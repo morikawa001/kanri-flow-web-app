@@ -114,7 +114,7 @@ function contentCheckFromCsv(text, rowIdx) {
 function csvFromRequests() {
   var rows = requestRowsData();
   var isApply = pageMode === 'apply';
-  var header = ['申請管理者報告_起案日','公表管理者報告_起案日','元の起案番号','起案番号','報告区分','担当者','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
+  var header = ['申請管理者報告_起案日','公表管理者報告_起案日','元の起案番号','起案番号','報告区分','担当者','起案者職名','所属・部門名','ステータス','公表日','報告期間','jRCT URL','jRCT番号','研究課題名','研究責任者','研究区分','サブ分類','研究略称','研究責任者1所属','研究責任者1部署','研究責任者1職名','研究責任者1氏名','研究責任者2氏名','研究責任者2所属','研究責任者2部署','研究責任者2職名','管理者報告メール送信日','管理者側フォルダパス','自施設他施設','報告詳細','step1(秒)','step2(秒)','step3(秒)','step4(秒)','step5(秒)','step6(秒)','step7(秒)','メール件名','メール本文'];
   if (isApply) header.splice(header.indexOf('公表日') + 1, 0, '承認日');
   if (isApply) header.push('申請内容','備考','申請内容チェック','審査依頼書添付資料');
   var mailDraft = getMailDraftRecord();
@@ -139,7 +139,7 @@ function csvFromRequests() {
   var draftDate = normalizeToYmdSlash(state.draftDate || todayFormatted());
   var body = rows.map(function(r, idx) {
     var rowArr = [
-      isApply ? draftDate : '', isApply ? '' : draftDate, r.base || '', requestOutputNo(r), r.type, drafter, getValue('drafterDept') || '', status,
+      isApply ? draftDate : '', isApply ? '' : draftDate, r.base || '', requestOutputNo(r), r.type, drafter, getValue('drafterTitle') || '', getValue('drafterDept') || '', status,
       r.type === '定期報告' ? '' : normalizeToYmdSlash(r.date || '')
     ];
     if (pageMode === 'apply') rowArr.push(r.approval || '');
@@ -263,6 +263,7 @@ function applyLedgerParsed(parsed) {
   var first = parsed.rows[0];
   if (first['研究課題名']) state.studyTitle = first['研究課題名'];
   if (first['担当者']) state.drafterName = first['担当者'];
+  if (first['起案者職名']) state.drafterTitle = first['起案者職名'];
   if (first['所属・部門名']) state.drafterDept = first['所属・部門名'];
   if (first['研究略称']) state.mailSubject = first['研究略称'];
   if (first['jRCT番号']) state.jrctNo = first['jRCT番号'];
@@ -395,7 +396,7 @@ function clearLedgerRowSelection() {
 function ledgerCsvForDownload() {
   var headers = state.loadedLedgerHeaders.length
     ? state.loadedLedgerHeaders.slice()
-    : ['申請管理者報告_起案日','公表管理者報告_起案日','起案番号','報告区分','担当者','ステータス','公表日','jRCT URL','元の起案番号','研究課題名','研究責任者'];
+    : ['申請管理者報告_起案日','公表管理者報告_起案日','起案番号','報告区分','担当者','起案者職名','ステータス','公表日','jRCT URL','元の起案番号','研究課題名','研究責任者'];
   ensureDraftDateColumns(headers);
   if (!headers.includes('研究課題名')) headers.push('研究課題名');
   if (!headers.includes('研究責任者')) headers.push('研究責任者');
@@ -404,6 +405,7 @@ function ledgerCsvForDownload() {
   if (!headers.includes('管理者側フォルダパス')) headers.push('管理者側フォルダパス');
   if (!headers.includes('元の起案番号')) headers.push('元の起案番号');
   if (!headers.includes('担当者')) headers.push('担当者');
+  if (!headers.includes('起案者職名')) headers.push('起案者職名');
   if (!headers.includes('研究区分')) headers.push('研究区分');
   if (!headers.includes('サブ分類')) headers.push('サブ分類');
   if (!headers.includes('研究略称')) headers.push('研究略称');
@@ -445,6 +447,7 @@ function ledgerCsvForDownload() {
   var studyTitle = getValue('studyTitle') || '';
   var managerName = buildManagerDisplay() || '';
   var drafter = getValue('drafterName') || '';
+  var drafterTitle = getValue('drafterTitle') || '';
   var mailSubject = getValue('mailSubject') || '';
   var studyTypeSpecific = !!state.studyTypeSpecific;
   var studyTypeNonspecific = !!state.studyTypeNonspecific;
@@ -493,6 +496,7 @@ function ledgerCsvForDownload() {
     if (!obj['研究課題名']) obj['研究課題名'] = studyTitle;
     if (!obj['研究責任者']) obj['研究責任者'] = managerName;
     if (!obj['担当者']) obj['担当者'] = drafter;
+    if (!obj['起案者職名']) obj['起案者職名'] = drafterTitle;
     if (!obj['研究区分']) obj['研究区分'] = studyCategory;
     if (!obj['サブ分類']) obj['サブ分類'] = subCategory;
     if (!obj['研究略称']) obj['研究略称'] = mailSubject;

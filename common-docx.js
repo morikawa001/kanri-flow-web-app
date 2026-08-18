@@ -409,6 +409,7 @@ function docxDataForRow(r) {
 
   return {
     '所属部門': safeDocxText(getValue('drafterDept') || ''),
+    '起案者職名': safeDocxText(getValue('drafterTitle') || ''),
     '起案者名': safeDocxText(getValue('drafterName') || ''),
     '所属': safeDocxText(getValue('managerAffil1') || ''),
     '所属部署': safeDocxText(getValue('managerDept1') || ''),

@@ -95,14 +95,14 @@ html[data-theme="dark"] body.page-apply{
 </div>
 <script>var pageMode = 'apply';</script>
 <script src="common.js?v=20260811"></script>
-<script src="common-flow.js?v=20260815"></script>
-<script src="common-csv.js?v=20260818"></script>
-<script src="common-docx.js?v=a0ff479"></script>
+<script src="common-flow.js?v=20260819"></script>
+<script src="common-csv.js?v=20260819"></script>
+<script src="common-docx.js?v=20260819"></script>
 <script src="common-ui.js?v=20260815"></script>
-<script src="state.js?v=20260817"></script>
+<script src="state.js?v=20260819"></script>
 <script src="utils.js?v=20260811"></script>
 <script src="dates.js?v=20260815"></script>
-<script src="identifiers.js?v=20260815"></script>
+<script src="identifiers.js?v=20260819"></script>
 <script>
 const stages = [
 {
@@ -133,6 +133,7 @@ fields:[
 {id:'managerTitle2',label:'研究責任者2 職名',type:'text',placeholder:'例：教授'},
 {id:'managerName2',label:'研究責任者2 氏名',type:'text',placeholder:'例：〇〇 〇〇'},
 {id:'draftDate',label:'申請管理者報告_起案日',type:'text',placeholder:'yyyy/mm/dd（自動入力されます）'},
+{id:'drafterTitle',label:'起案・申請書類の起案者職名',type:'text',placeholder:'例：師長',options:['師長','副看護師長','事務員']},
 {id:'drafterName',label:'起案・申請書類の起案者',type:'text',placeholder:'例：森川 〇〇'},
 {id:'drafterDept',label:'所属・部門名',type:'text',placeholder:'例：臨床研究支援部門',options:['臨床研究管理・調整室']},
 ],
@@ -289,7 +290,25 @@ function renderMain(){
   }
 
   const standardFields=(stage.fields||[]).filter(f=>!['managerAffil1','managerDept1','managerTitle1','managerName1','managerAffil2','managerDept2','managerTitle2','managerName2'].includes(f.id));
-  const fieldHTML=standardFields.map(f=>{
+  const fieldHTML=standardFields.map((f,i)=>{
+    if(f.id==='drafterName' && i>0 && standardFields[i-1] && standardFields[i-1].id==='drafterTitle') return '';
+    if(f.id==='drafterTitle'){
+      const next=standardFields[i+1];
+      const currentVal = state[f.id] || '';
+      const isPreset = f.options.includes(currentVal);
+      const nameVal = next ? (state[next.id]||'') : '';
+      return `<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:.6rem">
+<div class="field"><label>${h(f.label)}</label>
+<div style="display:grid;gap:.35rem">
+<select class="input" data-preset-select="${f.id}" style="height:auto;padding:.45rem .6rem">
+<option value="">選択してください</option>
+${f.options.map(o=>`<option value="${h(o)}" ${currentVal===o?'selected':''}>${h(o)}</option>`).join('')}
+<option value="__free" ${!isPreset && currentVal ? 'selected':''}>自由記載</option>
+</select>
+<input class="input" data-preset-free="${f.id}" id="${f.id}" value="${h(currentVal)}" placeholder="${h(f.placeholder||'')}" ${!isPreset && currentVal ? '':'style="display:none"'}></div></div>
+${next?`<div class="field"><label>${h(next.label)}</label>`+`<input type="text" class="input" data-bind="${next.id}" id="${next.id}" value="${h(nameVal)}" placeholder="${h(next.placeholder||'')}"></div>`:''}
+</div>`;
+    }
     if(f.options && f.options.length){
       const currentVal = state[f.id] || '';
       const isPreset = f.options.includes(currentVal);
@@ -1808,7 +1827,7 @@ function resetAll(){
   state.stepEnterTimestamp=null;
   state.stepDurations={};
   state.lastRenderedStageId=null;
-  ['mailSubject','studyTitle','jrctNo','managerAffil1','managerDept1','managerTitle1','managerName1','managerAffil2','managerDept2','managerTitle2','managerName2','drafterName','drafterDept','sendDate','studyTypeSpecific','studyTypeUnapproved','studyTypeFunding','studyTypeNonspecific','attachmentInputRaw'].forEach(k=>{delete state[k];});
+  ['mailSubject','studyTitle','jrctNo','managerAffil1','managerDept1','managerTitle1','managerName1','managerAffil2','managerDept2','managerTitle2','managerName2','drafterTitle','drafterName','drafterDept','sendDate','studyTypeSpecific','studyTypeUnapproved','studyTypeFunding','studyTypeNonspecific','attachmentInputRaw'].forEach(k=>{delete state[k];});
   state.draftDate=todayFormatted();
   fileStatuses={};
   state.assistSeen={};

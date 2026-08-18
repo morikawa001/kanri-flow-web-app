@@ -135,6 +135,7 @@ App.identifiers = (function() {
       var first = rows[0];
       if (first['研究課題名']) state.studyTitle = first['研究課題名'];
       if (first['担当者']) state.drafterName = first['担当者'];
+      if (first['起案者職名']) state.drafterTitle = first['起案者職名'];
       if (first['所属・部門名']) state.drafterDept = first['所属・部門名'];
       if (first['研究略称']) state.mailSubject = first['研究略称'];
       if (first['jRCT番号']) state.jrctNo = first['jRCT番号'];
