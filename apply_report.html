@@ -114,6 +114,16 @@ html[data-theme="dark"] body.page-apply{
     { category: '変更', source: '様式第一（第三十九条関係）_実施計画', pattern: ['特XXXX-XX-XXXX-X-2','公表','7.0','実施計画'], required: false, ext: 'pdf' }
   ]);
 })();
+// ステップ4でコピーできるようにするその他資料のファイル名（applyのみ・起案番号プレフィックスに後続）
+var APPLY_COPY_FILENAMES = [
+  { label: '利益相反管理計画書（様式E）', suffix: '_変更_23_COI様式E' },
+  { label: '様式A_利益相反管理基準', suffix: '_変更_22_COI様式A' },
+  { label: '統一書式１_研究分担医師リスト', suffix: '_変更_24_分担医師' },
+  { label: '説明文書・同意書', suffix: '_変更_14_ICF' },
+  { label: '研究計画書', suffix: '_変更_12_PRT' },
+  { label: '添付文書', suffix: '_変更_16_医薬品概要' },
+  { label: 'モニタリング手順書', suffix: '_変更_18_モニ' }
+];
 const stages = [
 {
 id:'intake',num:1,title:'案件受付・入口入力',
@@ -878,6 +888,17 @@ jRCT番号：${h(getValue('jrctNo')||'')}
           </div>
           <div class="template-block" style="margin-top:.75rem">
             ${naming.html}
+          </div>
+
+          <div class="section-title">コピー用ファイル名（その他資料）</div>
+          <div class="template-block" style="margin-top:.75rem">
+            ${APPLY_COPY_FILENAMES.map(function(item){
+              const fname = no + item.suffix;
+              return '<div class="template-card"><h4>' + h(item.label) + '</h4>' +
+                '<div class="mono">' + h(fname) + '</div>' +
+                '<div style="margin-top:.4rem"><button type="button" class="ghost-btn" data-copy-filename data-filename="' + h(fname) + '">ファイル名をコピー</button></div>' +
+                '</div>';
+            }).join('')}
           </div>
         </div>
       `;
