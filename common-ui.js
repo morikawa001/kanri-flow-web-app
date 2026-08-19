@@ -80,11 +80,12 @@ function reportTypeFromLabel(label) {
   if (pageMode !== 'apply') return label;
   return {'新規申請':'初回公表','変更申請':'変更'}[label] || label;
 }
-// publish：初回公表を選択した場合に各報告区分の横へ付けるガイド文言
-function publishFirstTypeGuide(type) {
+// publish：初回公表を選択した場合に依頼1〜3の各報告区分の横へ付けるガイド文言（依頼4以降は対象外）
+function publishFirstTypeGuide(type, i) {
   if (pageMode !== 'publish') return '';
   var firstPub = (state.requestRows || []).some(function(x) { return x.type === '初回公表'; });
   if (!firstPub) return '';
+  if (i > 2) return '';
   return {'初回公表':'新規申請','変更':'認定臨床研究審査委員会の承認日の変更等','軽微変更':'研究計画書・説明同意文書への承認日追記に伴う版更新'}[type] || '';
 }
 function renderRequestRows(hostOverride) {
@@ -97,7 +98,8 @@ function renderRequestRows(hostOverride) {
     state.requestRows = [{type: (pageMode === 'publish' ? '' : '初回公表'), base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
   var requestHtml = requestRowsData().map(function(r, i) {
     var isPeriodic = r.type === '定期報告';
-    var typeGuide = publishFirstTypeGuide(r.type);
+    var typeGuide = publishFirstTypeGuide(r.type, i);
+    var hidePubFields = pageMode === 'publish' && (state.requestRows || []).some(function(x) { return x.type === '初回公表'; }) && (i === 1 || i === 2);
     var isApply = pageMode === 'apply';
     var dateLabel = isPeriodic ? '報告期間' : '公表日';
     var datePlaceholder = isPeriodic ? '例：2026/4/5～2026/9/30' : '例：2026/7/5';
@@ -105,11 +107,11 @@ function renderRequestRows(hostOverride) {
       ? '<div class="field"><label>承認日</label>' +
         '<input class="input" data-r-approval="' + i + '" value="' + h(formatDateToJapanese(r.approval||'')) + '" placeholder="例：2026年7月5日">' +
         '</div>'
-      : '<div class="field"><label>' + dateLabel + '</label>' +
+      : (hidePubFields ? '' : '<div class="field"><label>' + dateLabel + '</label>' +
         '<input class="input" data-r-date="' + i + '" value="' + h(isPeriodic ? formatDateRangeToSlash(r.date || '') : normalizeToYmdSlash(r.date || '')) + '" placeholder="' + datePlaceholder + '"' + (isPeriodic ? ' pattern="\\d{4}/\\d{1,2}/\\d{1,2}～\\d{4}/\\d{1,2}/\\d{1,2}" title="形式：yyyy/m/d～yyyy/m/d"' : '') + '>' +
         (isPeriodic ? '<div class="help" style="color:var(--primary)">形式：yyyy/m/d～yyyy/m/d（最初の日付入力後に「～」が自動挿入されます）</div>' : '') +
-        '</div>';
-    var urlField = isApply
+        '</div>');
+    var urlField = isApply || hidePubFields
       ? ''
       : '<div class="field" style="margin-top:.7rem"><label>jRCT URL</label>' +
         '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct...">' +
