@@ -167,7 +167,7 @@ function renderRequestRows(hostOverride) {
         var baseRef = (state.requestRows[i] && state.requestRows[i].base) || '特2025-17_2-1';
         if (types.indexOf('変更') === -1) state.requestRows.push({type: '変更', base: baseRef, date: '', url: '', facilityType: '', facilityDetail: ''});
         if (types.indexOf('軽微変更') === -1) state.requestRows.push({type: '軽微変更', base: baseRef, date: '', url: '', facilityType: '', facilityDetail: ''});
-        alert('変更と軽微変更の有無も確認すること');
+        alert('初回公表の場合は下の３つを１つの管理者報告として扱う\n初回公表：新規申請\n変更：認定臨床研究審査委員会の承認日の変更等\n軽微変更：研究計画書への承認日追記に伴う版更新・説明同意文書への承認日追記に伴う版更新');
       }
       renderAll();
     });
