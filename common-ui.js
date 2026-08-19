@@ -80,6 +80,13 @@ function reportTypeFromLabel(label) {
   if (pageMode !== 'apply') return label;
   return {'新規申請':'初回公表','変更申請':'変更'}[label] || label;
 }
+// publish：初回公表を選択した場合に各報告区分の横へ付けるガイド文言
+function publishFirstTypeGuide(type) {
+  if (pageMode !== 'publish') return '';
+  var firstPub = (state.requestRows || []).some(function(x) { return x.type === '初回公表'; });
+  if (!firstPub) return '';
+  return {'初回公表':'新規申請','変更':'認定臨床研究審査委員会の承認日の変更等','軽微変更':'研究計画書・説明同意文書への承認日追記に伴う版更新'}[type] || '';
+}
 function renderRequestRows(hostOverride) {
   var hosts = hostOverride
     ? [hostOverride]
@@ -90,6 +97,7 @@ function renderRequestRows(hostOverride) {
     state.requestRows = [{type: (pageMode === 'publish' ? '' : '初回公表'), base: '特2025-17_2-1', date: '', url: '', facilityType: '', facilityDetail: '', content: '', notes: ''}];
   var requestHtml = requestRowsData().map(function(r, i) {
     var isPeriodic = r.type === '定期報告';
+    var typeGuide = publishFirstTypeGuide(r.type);
     var isApply = pageMode === 'apply';
     var dateLabel = isPeriodic ? '報告期間' : '公表日';
     var datePlaceholder = isPeriodic ? '例：2026/4/5～2026/9/30' : '例：2026/7/5';
@@ -119,6 +127,7 @@ function renderRequestRows(hostOverride) {
         return '<option ' + (reportTypeLabel(r.type) === opt ? 'selected' : '') + '>' + opt + '</option>';
       }).join('') +
       '</select>' +
+      (typeGuide ? '<div class="help" style="color:var(--primary);margin-top:.35rem">' + typeGuide + '</div>' : '') +
       (r.type && r.type.includes('疾病等') ? '<div style="margin-top:.5rem"><div class="help" style="margin-bottom:.3rem">自施設での発現か、他施設での発現かを選択してください。</div><div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap"><div class="mode-group" style="display:inline-flex"><button type="button" class="chip-btn ' + (r.facilityType === '自施設' ? 'active-mode' : '') + '" data-r-facility="' + i + '" data-facility-val="自施設">自施設</button><button type="button" class="chip-btn ' + (r.facilityType === '他施設' ? 'active-mode' : '') + '" data-r-facility="' + i + '" data-facility-val="他施設">他施設</button></div><div class="field" style="margin:0;flex:1;min-width:180px"><label>報告詳細</label><input class="input" data-r-facility-detail="' + i + '" value="' + h(r.facilityDetail || '') + '" placeholder="報告詳細を入力"></div></div></div>' : '') +
       '</select></div>' +
       '<div class="field"><label>元の起案番号</label>' +
@@ -167,7 +176,7 @@ function renderRequestRows(hostOverride) {
         var baseRef = (state.requestRows[i] && state.requestRows[i].base) || '特2025-17_2-1';
         if (types.indexOf('変更') === -1) state.requestRows.push({type: '変更', base: baseRef, date: '', url: '', facilityType: '', facilityDetail: ''});
         if (types.indexOf('軽微変更') === -1) state.requestRows.push({type: '軽微変更', base: baseRef, date: '', url: '', facilityType: '', facilityDetail: ''});
-        alert('初回公表の場合は下の３つを１つの管理者報告として扱う\n初回公表：新規申請\n変更：認定臨床研究審査委員会の承認日の変更等\n軽微変更：研究計画書への承認日追記に伴う版更新・説明同意文書への承認日追記に伴う版更新');
+        alert('初回公表の場合は下の３つを１つの管理者報告として扱う\n初回公表：新規申請\n変更：認定臨床研究審査委員会の承認日の変更等\n軽微変更：研究計画書・説明同意文書への承認日追記に伴う版更新');
       }
       renderAll();
     });
