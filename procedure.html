@@ -326,21 +326,23 @@ return;
 }
 
 var t=text.replace(/\s/g,'');
-var bestMatch={procedure:null,count:0};
+// メール判定は申請管理者報告か公表管理者報告のみを対象とし、判断できない場合はその他報告にする
+var applyCount=0, publishCount=0;
+(keywordDict['申請管理者報告']||[]).forEach(function(kw){ if(t.indexOf(kw)!==-1) applyCount++; });
+(keywordDict['公表管理者報告']||[]).forEach(function(kw){ if(t.indexOf(kw)!==-1) publishCount++; });
 
-for(var proc in keywordDict){
-var count=0;
-keywordDict[proc].forEach(function(kw){
-if(t.indexOf(kw)!==-1)count++;
-});
-if(count>bestMatch.count){
-bestMatch={procedure:proc,count:count};
-}
+var chosen=null;
+if(applyCount>0 && applyCount>publishCount){
+chosen='申請管理者報告';
+}else if(publishCount>0 && publishCount>applyCount){
+chosen='公表管理者報告';
+}else{
+chosen='その他報告';
 }
 
 buttons.forEach(function(btn){
 var name=btn.querySelector('strong').textContent;
-if(bestMatch.procedure&&bestMatch.count>0&&name===bestMatch.procedure){
+if(name===chosen){
 btn.classList.add('highlighted');
 btn.classList.remove('dimmed');
 }else{
@@ -349,13 +351,12 @@ btn.classList.add('dimmed');
 }
 });
 
-if(bestMatch.procedure&&bestMatch.count>0){
-result.className='mail-result show success';
-result.innerHTML='✅ <strong>'+bestMatch.procedure+'</strong> が該当しました。ボタンをクリックして手続きを開始してください。';
-}else{
+if(chosen==='その他報告'){
 result.className='mail-result show info';
-result.textContent='🔍 該当する手続きが見つかりませんでした。手動で選択してください。';
-buttons.forEach(function(btn){btn.classList.remove('highlighted','dimmed');});
+result.textContent='🔍 申請管理者報告／公表管理者報告のいずれにも特定できなかったため、その他報告として扱います。';
+}else{
+result.className='mail-result show success';
+result.innerHTML='✅ <strong>'+chosen+'</strong> が該当しました。ボタンをクリックして手続きを開始してください。';
 }
 });
 
