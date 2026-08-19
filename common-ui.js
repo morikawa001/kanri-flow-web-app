@@ -340,10 +340,13 @@ var NAMING_MASTER = [
 ];
 
 // 命名規則を生成
-function namingRulesForRow(r) {
+// ステップ4で編集した想定ファイル名の保管（「行インデックス:項目インデックス」→カスタム名）
+var fileNameOverrides = {};
+function namingRulesForRow(r, rowIdx) {
   var category = r?.type || '初回公表';
   var items = NAMING_MASTER.filter(function(x) { return x.category === category; });
   var prefix = String(requestOutputNo(r) || '').trim();
+  rowIdx = rowIdx || 0;
 
   if (!items.length) {
     return {
@@ -362,13 +365,16 @@ function namingRulesForRow(r) {
     if (parts.length >= 3) {
       parts[2] = seqLabel(parts[2]);
     }
-    var filename = [prefix].concat(parts.slice(1)).join('_') + '.' + (it.ext || 'pdf');
+    var defaultFilename = [prefix].concat(parts.slice(1)).join('_') + '.' + (it.ext || 'pdf');
+    var filename = fileNameOverrides[rowIdx + ':' + idx] || defaultFilename;
 
     return '<div class="template-card">' +
       '<h4>' + (idx + 1) + '. ' + h(it.source) + '</h4>' +
       '<div class="mono">' +
       '必須：' + (it.required ? 'はい' : '状況により') + '（' + h(category) + '）' +
-      '\n想定ファイル名：\n' + h(filename) +
+      '</div>' +
+      '<div class="field" style="margin-top:.4rem"><label>想定ファイル名（編集可）</label>' +
+      '<input class="input" data-file-name="' + rowIdx + ':' + idx + '" value="' + h(filename) + '">' +
       '</div>' +
       '<div style="margin-top:.4rem;display:flex;gap:.4rem;flex-wrap:wrap;">' +
       '<button type="button" class="ghost-btn" data-copy-filename data-filename="' + h(filename.replace(/\.[^.]+$/, '')) + '">ファイル名をコピー</button>' +
@@ -420,6 +426,18 @@ function bindDraftsExtraEvents() {
         btn.style.color = 'var(--success)';
         setTimeout(function() { btn.textContent = orig; btn.style.color = ''; }, 1500);
       }).catch(function() {});
+    });
+  });
+
+  // 編集した想定ファイル名（データファイル名）を保管・コピーボタンへ反映
+  document.querySelectorAll('[data-file-name]').forEach(function(input) {
+    input.addEventListener('input', function() {
+      var key = input.dataset.fileName;
+      var val = input.value;
+      fileNameOverrides[key] = val;
+      var card = input.closest('.template-card');
+      var btn = card && card.querySelector('[data-copy-filename]');
+      if (btn) btn.setAttribute('data-filename', val.replace(/\.[^.]+$/, ''));
     });
   });
 

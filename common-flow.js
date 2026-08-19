@@ -282,12 +282,16 @@ function folderSetFor(r) {
   var applyNo = no.replace(/_(\d+)-(\d+)$/, function(_, a, b) {
     return '_' + a + '-' + Math.max(1, parseInt(b, 10) - 1);
   });
-  return {
+  var fs = {
     no: no,
     apply: applyNo + '_' + outType + '_申請',
     cscc: no + '_' + outType + '(cscc)',
     manager: no + '_' + outType
   };
+  if (r && r.folderApply) fs.apply = r.folderApply;
+  if (r && r.folderCscc) fs.cscc = r.folderCscc;
+  if (r && r.folderManager) fs.manager = r.folderManager;
+  return fs;
 }
 
 // フォルダ選択状態を取得

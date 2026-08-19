@@ -95,10 +95,10 @@ html[data-theme="dark"] body.page-apply{
 </div>
 <script>var pageMode = 'apply';</script>
 <script src="common.js?v=20260811"></script>
-<script src="common-flow.js?v=20260820"></script>
+<script src="common-flow.js?v=20260825"></script>
 <script src="common-csv.js?v=20260819"></script>
 <script src="common-docx.js?v=20260819"></script>
-<script src="common-ui.js?v=20260824"></script>
+<script src="common-ui.js?v=20260825"></script>
 <script src="state.js?v=20260819"></script>
 <script src="utils.js?v=20260811"></script>
 <script src="dates.js?v=20260815"></script>
@@ -839,13 +839,19 @@ jRCT番号：${h(getValue('jrctNo')||'')}
     <div class="card-bd template-block">
       ${rows.map((r,i)=>{
         const fs=folderSetFor(r);
-        return `<div class="template-card"><h4>依頼 ${i+1}：${h(reportTypeLabel(r.type))}</h4><div class="mono">申請：${h(fs.apply)}
-CSCC側：${h(fs.cscc)}
-管理者側：${h(fs.manager)}</div></div>`;
+        const fd =(k)=> r['folder'+k] || fs[k.toLowerCase()];
+        return `<div class="template-card"><h4>依頼 ${i+1}：${h(reportTypeLabel(r.type))}</h4>
+<div class="field" style="margin-top:.4rem"><label>申請フォルダ名（編集可）</label><input class="input" data-folder-name="apply" data-row="${i}" value="${h(fd('Apply'))}"></div>
+<div class="field" style="margin-top:.4rem"><label>CSCC側申請フォルダ名（編集可）</label><input class="input" data-folder-name="cscc" data-row="${i}" value="${h(fd('Cscc'))}"></div>
+<div class="field" style="margin-top:.4rem"><label>管理者側申請フォルダ名（編集可）</label><input class="input" data-folder-name="manager" data-row="${i}" value="${h(fd('Manager'))}"></div>
+</div>`;
       }).join('')}
       <div style="margin-top:.75rem">${checklistHtml()}</div>
       ${ctaHtml()}
     </div>`;
+    wrap.querySelectorAll('[data-folder-name]').forEach(el=>{
+      el.addEventListener('input',()=>{ setRequestRow(+el.dataset.row, 'folder'+el.dataset.folderName.charAt(0).toUpperCase()+el.dataset.folderName.slice(1), el.value); });
+    });
     wrap.querySelectorAll('[data-check]').forEach(el=>{
       el.addEventListener('change',()=>{checks[el.dataset.check]=el.checked;renderAll();});
     });
@@ -858,7 +864,7 @@ CSCC側：${h(fs.cscc)}
   <div class="card-hd"><h3>ファイル名候補・必須資料</h3><span class="badge">命名規則</span></div>
   <div class="card-bd template-block">
     ${rows.map((r,i)=>{
-      const naming = namingRulesForRow(r);
+      const naming = namingRulesForRow(r, i);
       const no = requestOutputNo(r);
 
       return `
