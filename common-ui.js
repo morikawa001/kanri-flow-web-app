@@ -102,12 +102,14 @@ function renderRequestRows(hostOverride) {
     var hidePubFields = pageMode === 'publish' && (state.requestRows || []).some(function(x) { return x.type === '初回公表'; }) && (i === 1 || i === 2);
     var isApply = pageMode === 'apply';
     var dateLabel = isPeriodic ? '報告期間' : '公表日';
+    var isSummaryPublishPartial = r.type === '主要評価項目報告書又は総括報告書の概要の公表（一部公表）';
+    var dateLabelNote = isSummaryPublishPartial ? '<span style="color:var(--warn)">※メールに記載されている届出日を入力</span>' : '';
     var datePlaceholder = isPeriodic ? '例：2026/4/5～2026/9/30' : '例：2026/7/5';
     var dateField = isApply
       ? '<div class="field"><label>承認日</label>' +
         '<input class="input" data-r-approval="' + i + '" value="' + h(formatDateToJapanese(r.approval||'')) + '" placeholder="例：2026年7月5日">' +
         '</div>'
-      : (hidePubFields ? '' : '<div class="field"><label>' + dateLabel + '</label>' +
+      : (hidePubFields ? '' : '<div class="field"><label>' + dateLabel + dateLabelNote + '</label>' +
         '<input class="input" data-r-date="' + i + '" value="' + h(isPeriodic ? formatDateRangeToSlash(r.date || '') : normalizeToYmdSlash(r.date || '')) + '" placeholder="' + datePlaceholder + '"' + (isPeriodic ? ' pattern="\\d{4}/\\d{1,2}/\\d{1,2}～\\d{4}/\\d{1,2}/\\d{1,2}" title="形式：yyyy/m/d～yyyy/m/d"' : '') + '>' +
         (isPeriodic ? '<div class="help" style="color:var(--primary)">形式：yyyy/m/d～yyyy/m/d（最初の日付入力後に「～」が自動挿入されます）</div>' : '') +
         '</div>');
