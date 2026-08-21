@@ -125,7 +125,7 @@ function renderRequestRows(hostOverride) {
       '<div class="field"><label>報告区分</label>' +
       '<select class="select" data-r-type="' + i + '">' +
       (pageMode === 'publish' ? '<option value=""' + (r.type ? '' : ' selected') + '>報告区分選択</option>' : '') +
-      (pageMode === 'apply' ? ['新規申請','変更申請','その他'] : ['初回公表','変更','軽微変更','届出外','疾病等報告（医薬品）','疾病等報告（医療機器）','疾病等報告（再生医療等製品）','不適合報告','主要評価項目報告書等の通知','主要評価項目報告書又は総括報告書の概要の公表','審査意見の報告','定期報告','終了','その他']).map(function(opt) {
+      (pageMode === 'apply' ? ['新規申請','変更申請','その他'] : ['初回公表','変更','軽微変更','届出外','疾病等報告（医薬品）','疾病等報告（医療機器）','疾病等報告（再生医療等製品）','不適合報告','主要評価項目報告書等の通知','主要評価項目報告書又は総括報告書の概要の公表','主要評価項目報告書又は総括報告書の概要の公表（一部公表）','審査意見の報告','定期報告','終了','その他']).map(function(opt) {
         return '<option ' + (reportTypeLabel(r.type) === opt ? 'selected' : '') + '>' + opt + '</option>';
       }).join('') +
       '</select>' +
