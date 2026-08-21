@@ -95,7 +95,7 @@ html[data-theme="dark"] body.page-apply{
 </div>
 <script>var pageMode = 'apply';</script>
 <script src="common.js?v=20260811"></script>
-<script src="common-flow.js?v=20260825"></script>
+<script src="common-flow.js?v=20260821"></script>
 <script src="common-csv.js?v=20260819"></script>
 <script src="common-docx.js?v=20260829"></script>
 <script src="common-ui.js?v=20260821"></script>
@@ -1832,6 +1832,7 @@ function renderAll(){
   renderAssistPopup();
 }
 // メール本文の「（jRCT 申請日未入力）」を「（申請内容）」に置換（apply専用・common-flow.jsの関数を上書き）
+// さらに「（申請内容）」へステップ1の申請内容データ（row.content）を反映する
 // 「（決裁後に確定する管理者側フォルダパス）」には現在のパスを自動反映する
 // 自動生成時だけでなくCSV復元後の古い本文でも置換するため emailDraft をラップする
 (function(){
@@ -1840,6 +1841,14 @@ function renderAll(){
     var d = origEmailDraft();
     if(pageMode==='apply' && d && d.body){
       d.body = d.body.split('（jRCT 申請日未入力）').join('（申請内容）');
+      // 依頼行ごとに「（申請内容）」をその行の申請内容データへ置換
+      var rows = state.requestRows || [];
+      var k = 0;
+      d.body = d.body.replace(/（申請内容）/g, function(){
+        var c = (k < rows.length && rows[k] && rows[k].content) ? rows[k].content : '申請内容';
+        k++;
+        return '（' + c + '）';
+      });
       var ph='（決裁後に確定する管理者側フォルダパス）';
       if(d.body.indexOf(ph)!==-1){
         var paths=state.managerPaths||[];

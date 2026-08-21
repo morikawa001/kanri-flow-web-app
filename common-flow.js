@@ -410,13 +410,13 @@ function autoEmailDraft() {
   
   // ページモードに応じた設定
   var isApply = (pageMode === 'apply');
-  var categoryLabel = isApply ? '申請' : '報告';
-  var categoryLabelKanji = isApply ? '申請' : '報告';
+  var categoryLabel = isApply ? '変更' : '報告';
+  var categoryLabelKanji = isApply ? '変更' : '報告';
   var dateLabel = isApply ? 'jRCT 申請日未入力' : 'jRCT 公表日未入力';
   var folderLabel = isApply ? '（決裁後に確定する管理者側フォルダパス）' : '（決裁後に確定する管理者側フォルダパス）';
   
   var details = rows.map(function(r, i) {
-    return '・' + requestOutputNo(r) + '_' + (isApply ? '申請' : '公表') + '（' + (formatDateToJapanese(r.date) || dateLabel) + '）\n「NAS」内保存場所：' + (paths[i] || folderLabel);
+    return '・' + requestOutputNo(r) + '_' + (isApply ? '変更' : '公表') + '（' + (formatDateToJapanese(r.date) || dateLabel) + '）\n「NAS」内保存場所：' + (paths[i] || folderLabel);
   }).join('\n\n');
   
   return {
