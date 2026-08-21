@@ -334,6 +334,12 @@ var NAMING_MASTER = [
   { category: '不適合報告', source: '統一書式4_審査結果通知書', pattern: ['特XXXX-XX-XXXX-X-2', '不適合', '2.0', '審査結果'], required: true, ext: 'pdf' },
   { category: '不適合報告', source: '統一書式7_重大な不適合報告書', pattern: ['特XXXX-XX-XXXX-X-2', '不適合', '3.0', '不適合報告書（重大な）'], required: true, ext: 'pdf' },
 
+  { category: '主要評価項目報告書等の通知', source: '管理者報告様式_臨床研究法における管理者への報告書', pattern: ['特XXXX-XX-XXXX-X-2', '公表', '1.0', '管理者報告'], required: true, ext: 'docx' },
+  { category: '主要評価項目報告書等の通知', source: 'jRCT_URL', pattern: ['特XXXX-XX-XXXX-X-2', '公表', '2.0', 'jRCT', 'URL'], required: true, ext: 'xlsx' },
+
+  { category: '主要評価項目報告書又は総括報告書の概要の公表', source: '管理者報告様式_臨床研究法における管理者への報告書', pattern: ['特XXXX-XX-XXXX-X-2', '公表', '1.0', '管理者報告'], required: true, ext: 'docx' },
+  { category: '主要評価項目報告書又は総括報告書の概要の公表', source: 'jRCT_URL', pattern: ['特XXXX-XX-XXXX-X-2', '公表', '2.0', 'jRCT', 'URL'], required: true, ext: 'xlsx' },
+
   { category: '疾病等報告（医療機器）', source: '管理者報告様式_臨床研究法における管理者への報告書', pattern: ['特XXXX-XX-XXXX-X-X', '公表', '1', '管理者報告'], required: true, ext: 'docx' },
   { category: '疾病等報告（医療機器）', source: '統一書式4_審査結果通知書', pattern: ['特XXXX-XX-XXXX-X-X', '医療機器', '2', '審査結果'], required: true, ext: 'pdf' },
   { category: '疾病等報告（医療機器）', source: '統一書式9_医療機器の疾病等又は不具合報告書（第1報）', pattern: ['特XXXX-XX-XXXX-X-X', '医療機器', '3', '不具合報告書'], required: true, ext: 'pdf' },
@@ -345,7 +351,8 @@ var NAMING_MASTER = [
 // ステップ4で編集した想定ファイル名の保管（「行インデックス:項目インデックス」→カスタム名）
 var fileNameOverrides = {};
 function namingRulesForRow(r, rowIdx) {
-  var category = r?.type || '初回公表';
+  var type = r?.type || '初回公表';
+  var category = type === '主要評価項目報告書又は総括報告書の概要の公表（一部公表）' ? '一部公表' : type;
   var items = NAMING_MASTER.filter(function(x) { return x.category === category; });
   var prefix = String(requestOutputNo(r) || '').trim();
   rowIdx = rowIdx || 0;
