@@ -156,6 +156,7 @@ function reportDocxDataForRow(r) {
     '報告事項_概要公表': mark(isSummaryPublish),
     '概要公表公表日': formatDateToJapanese(summaryPublishRow?.date || ''),
     '概要公表URL': safeDocxText(summaryPublishRow?.url || ''),
+    '概要公表_一部': safeDocxText(summaryPublishPartialRow ? '（一部公表）' : ''),
 
     '報告事項_審査意見': mark(isReviewOpinion),
     '審査意見公表日': formatDateToJapanese(reviewOpinionRow?.date || ''),
