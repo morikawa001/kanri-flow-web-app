@@ -244,6 +244,12 @@ function reportDocxDataForRow(r) {
           parts.push(label + 'の疾病等報告（' + detail + '）');
         });
       }
+      var otherRows = relatedRows.filter(function(x) { return x?.type === '主要評価項目報告書等の通知' || x?.type === '主要評価項目報告書又は総括報告書の概要の公表' || x?.type === '主要評価項目報告書又は総括報告書の概要の公表（一部公表）'; });
+      if (otherRows.length) {
+        otherRows.forEach(function(row) {
+          parts.push((row?.type || '') + '（公表日：' + normalizeToYmdSlash(row?.date || '') + '）');
+        });
+      }
       return parts.join('\n');
     })()),
 
@@ -533,6 +539,12 @@ function docxDataForRow(r) {
           var label = (row?.type || '').replace('疾病等報告（', '').replace('）', '');
           var detail = row?.facilityDetail || '';
           parts.push(label + 'の疾病等報告（' + detail + '）');
+        });
+      }
+      var otherRows = targetRows.filter(function(x) { return x?.type === '主要評価項目報告書等の通知' || x?.type === '主要評価項目報告書又は総括報告書の概要の公表' || x?.type === '主要評価項目報告書又は総括報告書の概要の公表（一部公表）'; });
+      if (otherRows.length) {
+        otherRows.forEach(function(row) {
+          parts.push((row?.type || '') + '（公表日：' + normalizeToYmdSlash(row?.date || '') + '）');
         });
       }
       return parts.join('\n');
