@@ -44,7 +44,9 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .brand svg{width:34px;height:34px;color:var(--primary);filter:drop-shadow(0 1px 2px var(--primary-glow))}
 .brand h1{font-size:1rem;line-height:1.2;font-weight:700;letter-spacing:-.01em}
 .brand p{font-size:.74rem;color:var(--muted);letter-spacing:.01em}
-.actions{display:flex;gap:.5rem;align-items:center}
+.actions{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:0}
+.actions > .mode-group{flex:0 0 auto;white-space:nowrap}
+.actions > button{flex:0 0 auto;white-space:nowrap;min-width:max-content}
 
 /* ボタン共通 */
 .icon-btn{width:36px;height:36px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-sm);border-radius:var(--pill);transition:all .2s cubic-bezier(.4,0,.2,1)}
@@ -211,6 +213,8 @@ kbd{display:inline-block;padding:.15em .45em;font-size:.78em;font-family:ui-mono
 @media(max-width:1280px){.main{grid-template-columns:1.1fr 1fr}}
 @media(max-width:920px){
 .main{grid-template-columns:1fr}
+.topbar{flex-wrap:wrap}
+.actions{flex:1 1 100%;justify-content:flex-start}
 .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
 .flow-guide{padding:.5rem .85rem;gap:.2rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
 .flow-guide .flow-step{scroll-snap-align:start;font-size:.68rem;padding:.3rem .5rem}
