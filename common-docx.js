@@ -54,7 +54,7 @@ function reportDocxDataForRow(r) {
   var minorRow = firstRowOfType('軽微変更');
   var futekigouRow = firstRowOfType('不適合報告');
   var mainResultNotifyRow = firstRowOfType('主要評価項目報告書等の通知');
-  var summaryPublishRow = firstRowOfType('主要評価項目報告書又は総括報告書の概要の公表');
+  var summaryPublishRow = relatedRows.find(function(x) { return x?.type === '主要評価項目報告書又は総括報告書の概要の公表' || x?.type === '主要評価項目報告書又は総括報告書の概要の公表（一部公表）'; }) || null;
   var summaryPublishPartialRow = firstRowOfType('主要評価項目報告書又は総括報告書の概要の公表（一部公表）');
   var reviewOpinionRow = firstRowOfType('審査意見の報告');
 
@@ -77,7 +77,7 @@ function reportDocxDataForRow(r) {
 
   var isFutekigou = hasType('不適合報告');
   var isMainResultNotify = hasType('主要評価項目報告書等の通知');
-  var isSummaryPublish = hasType('主要評価項目報告書又は総括報告書の概要の公表');
+  var isSummaryPublish = hasType('主要評価項目報告書又は総括報告書の概要の公表') || hasType('主要評価項目報告書又は総括報告書の概要の公表（一部公表）');
   var isReviewOpinion = hasType('審査意見の報告');
   var isOther = hasType('その他');
 
@@ -250,7 +250,7 @@ function reportDocxDataForRow(r) {
     '詳細内容': safeDocxText((function() {
       var hasPeriodic = relatedRows.some(function(x) { return x?.type === '定期報告'; });
       var hasIssue = relatedRows.some(function(x) { return x?.type && x.type.includes('疾病等'); });
-      var pubPairs = [['初回公表', initialRow], ['変更', changeRow], ['軽微変更', minorRow], ['主要評価項目報告書等の通知', mainResultNotifyRow], ['主要評価項目報告書又は総括報告書の概要の公表', summaryPublishRow], ['主要評価項目報告書又は総括報告書の概要の公表（一部公表）', summaryPublishPartialRow]].filter(function(arr) { return arr[1]; });
+      var pubPairs = [['初回公表', initialRow], ['変更', changeRow], ['軽微変更', minorRow], ['主要評価項目報告書等の通知', mainResultNotifyRow], ['主要評価項目報告書又は総括報告書の概要の公表', summaryPublishRow]].filter(function(arr) { return arr[1]; });
       var parts = [];
       if (pubPairs.length) {
         var urlLines = pubPairs.map(function(arr) { return arr[0] + '　' + (arr[1]?.url || '').trim(); }).join('\n');
@@ -401,7 +401,7 @@ function docxDataForRow(r) {
   var minorRow = firstRowOfType('軽微変更');
   var todokedeGaiRow = firstRowOfType('届出外');
   var mainResultNotifyRow = firstRowOfType('主要評価項目報告書等の通知');
-  var summaryPublishRow = firstRowOfType('主要評価項目報告書又は総括報告書の概要の公表');
+  var summaryPublishRow = targetRows.find(function(x) { return x?.type === '主要評価項目報告書又は総括報告書の概要の公表' || x?.type === '主要評価項目報告書又は総括報告書の概要の公表（一部公表）'; }) || null;
   var summaryPublishPartialRow = firstRowOfType('主要評価項目報告書又は総括報告書の概要の公表（一部公表）');
 
   var reportPairs = [
@@ -540,7 +540,7 @@ function docxDataForRow(r) {
     '詳細内容': safeDocxText((function() {
       var hasPeriodic = targetRows.some(function(x) { return x?.type === '定期報告'; });
       var hasIssue = targetRows.some(function(x) { return x?.type && x.type.includes('疾病等'); });
-      var pubPairs = [['初回公表', initialRow], ['変更', changeRow], ['軽微変更', minorRow], ['主要評価項目報告書等の通知', mainResultNotifyRow], ['主要評価項目報告書又は総括報告書の概要の公表', summaryPublishRow], ['主要評価項目報告書又は総括報告書の概要の公表（一部公表）', summaryPublishPartialRow]].filter(function(arr) { return arr[1]; });
+      var pubPairs = [['初回公表', initialRow], ['変更', changeRow], ['軽微変更', minorRow], ['主要評価項目報告書等の通知', mainResultNotifyRow], ['主要評価項目報告書又は総括報告書の概要の公表', summaryPublishRow]].filter(function(arr) { return arr[1]; });
       var parts = [];
       if (pubPairs.length) {
         var urlLines = pubPairs.map(function(arr) { return arr[0] + '　' + (arr[1]?.url || '').trim(); }).join('\n');
