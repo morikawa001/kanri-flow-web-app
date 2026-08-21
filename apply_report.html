@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>申請管理者報告 - 管理者報告フロー統合パネル</title>
+<title>変更申請管理者報告 - 管理者報告フロー統合パネル</title>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
 <style>
@@ -84,7 +84,7 @@ html[data-theme="dark"] body.page-apply{
 </div>
 </header>
 <section class="headline">
-<h2 id="headlineTitle">申請管理者報告起案：入口入力から台帳CSV・フォルダZIP作成まで</h2>
+<h2 id="headlineTitle">変更申請管理者報告起案：入口入力から台帳CSV・フォルダZIP作成まで</h2>
 <p id="headlineText">研究課題名・研究責任者などの共通情報を最初に入力し、複数依頼は1件ずつ管理します。台帳CSVを読み込むと途中から再開できます。</p>
 </section>
 <section class="flow-guide" id="flowGuide"></section>
@@ -98,7 +98,7 @@ html[data-theme="dark"] body.page-apply{
 <script src="common-flow.js?v=20260825"></script>
 <script src="common-csv.js?v=20260819"></script>
 <script src="common-docx.js?v=20260829"></script>
-<script src="common-ui.js?v=20260828"></script>
+<script src="common-ui.js?v=20260821"></script>
 <script src="state.js?v=20260819"></script>
 <script src="utils.js?v=20260811"></script>
 <script src="dates.js?v=20260815"></script>
@@ -301,7 +301,7 @@ function renderMain(){
     wrap.innerHTML=`
 <div class="success-banner">
 <div style="font-size:3rem">🎉</div>
-<h3>${state.appMode==='front'?'起案完了':'申請管理者報告完了'}</h3>
+<h3>${state.appMode==='front'?'起案完了':'変更申請管理者報告完了'}</h3>
 <p class="small">${state.appMode==='front'
       ? '台帳CSVひな型とフォルダZIPの作成まで完了しました。'
       : '台帳CSVの読込から更新済み台帳CSV出力まで完了しました。'}</p>
@@ -433,9 +433,9 @@ ${requestRowsData().map((r,i)=>{
 </div>`
     : stage.id==='work'
       ? `
-<div class="section-title">申請管理者報告台帳CSVを読み込んでステップ5から再開</div>
+<div class="section-title">変更申請管理者報告台帳CSVを読み込んでステップ5から再開</div>
 <div class="template-card" style="margin-top:.7rem">
-<div class="field"><label>申請管理者報告台帳CSV・Excelを読み込み</label>
+<div class="field"><label>変更申請管理者報告台帳CSV・Excelを読み込み</label>
 <div id="csvDropZoneStep5" class="csv-dropzone">
 <input type="file" id="csvInputStep5" accept=".csv,.xlsx,.xls" class="input" style="padding:.4rem .6rem;height:auto">
 </div>
@@ -478,7 +478,7 @@ ${(state.selectedLedgerIndexes||[]).length
   : '<div class="help">台帳行を選択すると、対象フォルダがここに表示されます。</div>'}`
     : stage.id==='path'
       ? `
-<div class="section-title">申請管理者報告メール案</div>
+<div class="section-title">変更申請管理者報告メール案</div>
 ${(()=>{
   const rows=requestRowsData();
   const draft=emailDraft();
@@ -504,7 +504,7 @@ ${(()=>{
 })()}`
     : stage.id==='send'
       ? `
-<div class="section-title">申請管理者報告台帳への書き戻し</div>
+<div class="section-title">変更申請管理者報告台帳への書き戻し</div>
 <div class="template-card" style="margin-top:.7rem">
 <div class="grid-2" style="margin-bottom:.7rem">
 <div class="field"><label>研究課題名（台帳CSVへ記録）</label><input class="input readonly" readonly value="${h(getValue('studyTitle')||'（未入力）')}"></div>
@@ -512,7 +512,7 @@ ${(()=>{
 </div>
 <div class="help">ステップ5で選択した台帳行に対して、ステータス=送信済、送信日、管理者側フォルダパス、研究課題名・研究責任者を書き込んでCSVを書き出します。</div>
 </div>
-<div class="section-title">申請管理者報告メール案</div>
+<div class="section-title">変更申請管理者報告メール案</div>
 ${(()=>{
   const draft=emailDraft();
   return `<div class="template-card" style="margin-top:.7rem">
@@ -1010,7 +1010,7 @@ jRCT URL：${h(r.url||'')}</div>
     </div>
 
     <div class="template-card">
-      <h4>申請管理者報告メール案</h4>
+      <h4>変更申請管理者報告メール案</h4>
       <div class="help" style="margin-bottom:.5rem">件名と本文を編集できます。ZIP出力・各ステージのメール案に自動反映されます。</div>
       <div class="field"><label>件名</label><input class="input" id="mailSubjectEdit" value="${h(draft.subject)}"></div>
       <div class="field" style="margin-top:.5rem"><label>本文</label><textarea class="textarea" id="mailBodyEdit" style="min-height:180px">${h(draft.body)}</textarea></div>
@@ -1019,7 +1019,7 @@ jRCT URL：${h(r.url||'')}</div>
 
     <div class="template-card" style="text-align:center">
       <h4>フォルダZIP出力</h4>
-      <div class="help">起案docx・報告案docx（ひな形読込済みの場合）・台帳CSV・申請管理者報告メール案をまとめてフォルダ構成でダウンロードします。起案docx・報告案docxは(cscc)側フォルダに格納されます。</div>
+      <div class="help">起案docx・報告案docx（ひな形読込済みの場合）・台帳CSV・変更申請管理者報告メール案をまとめてフォルダ構成でダウンロードします。起案docx・報告案docxは(cscc)側フォルダに格納されます。</div>
       <div style="margin-top:.7rem">
         <button class="primary-btn" id="downloadZipBtn">📦 フォルダZIPを生成してダウンロード</button>
       </div>
@@ -1098,15 +1098,15 @@ jRCT URL：${h(r.url||'')}</div>
 
   if(stage.id==='send'){
     wrap.innerHTML=`
-    <div class="card-hd"><h3>申請管理者報告メール送信・CSV更新</h3><span class="badge">送信</span></div>
+    <div class="card-hd"><h3>変更申請管理者報告メール送信・CSV更新</h3><span class="badge">送信</span></div>
     <div class="card-bd template-block">
       <div class="template-card">
         <h4>送信情報</h4>
-        <div class="field"><label>申請管理者報告メール送信日</label><input class="input" data-bind="sendDate" id="sendDate" value="${h(state.sendDate||'')}" placeholder="例：2026/7/5"></div>
+        <div class="field"><label>変更申請管理者報告メール送信日</label><input class="input" data-bind="sendDate" id="sendDate" value="${h(state.sendDate||'')}" placeholder="例：2026/7/5"></div>
       </div>
       <div style="margin-top:.75rem">${checklistHtml()}</div>
       <div class="template-card" style="margin-top:.75rem">
-        <div class="field"><label>更新済み申請管理者報告台帳CSVをダウンロード</label>
+        <div class="field"><label>更新済み変更申請管理者報告台帳CSVをダウンロード</label>
         <button class="primary-btn" id="csvDownloadBackBtn" type="button">📄 更新済み台帳CSVをダウンロード</button>
         <div class="help" id="csvStatusStep7" style="margin-top:.4rem">${fileStatuses.csvStep7 || ''}</div>
         </div>
@@ -1723,8 +1723,8 @@ const ASSIST_DATA = {
   work:{
     title:'CSCC側の作業を始めます',
     steps:[
-      'まず、申請管理者報告台帳CSVファイルを読み込みます。',
-      '「参照」ボタンから「申請管理者報告_進捗台帳.csv」を選んでください。',
+      'まず、変更申請管理者報告台帳CSVファイルを読み込みます。',
+      '「参照」ボタンから「変更申請管理者報告_進捗台帳.csv」を選んでください。',
       '読み込まれた行の中から、作業する対象の案件にチェックを入れます。',
       '選択した案件に対応するCSCC側フォルダが表示されます。必要書類を格納してください。'
     ]
@@ -1740,7 +1740,7 @@ const ASSIST_DATA = {
   send:{
     title:'最後にメール送信と台帳更新です',
     steps:[
-      '申請管理者報告メールの送信日を入力してください。',
+      '変更申請管理者報告メールの送信日を入力してください。',
       'メール案（件名・本文）を確認します。内容は入力データから自動生成されています。',
       '「更新済み台帳CSVをダウンロード」ボタンで、進捗台帳を更新します。',
       'これですべての作業が完了です。お疲れさまでした！'

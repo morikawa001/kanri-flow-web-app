@@ -24,13 +24,13 @@ function updateModeUI() {
   document.getElementById('modeBackBtn').classList.toggle('active-mode', !front);
   
   var isApply = (pageMode === 'apply');
-  var frontTitle = isApply ? '申請管理者報告起案：入口入力から台帳CSV・フォルダZIP作成まで' : '公表管理者報告起案：入口入力から台帳CSV・フォルダZIP作成まで';
-  var backTitle = isApply ? '申請管理者報告：台帳CSV読込から台帳更新CSV出力まで' : '公表管理者報告：台帳CSV読込から台帳更新CSV出力まで';
+  var frontTitle = isApply ? '変更申請管理者報告起案：入口入力から台帳CSV・フォルダZIP作成まで' : '公表管理者報告起案：入口入力から台帳CSV・フォルダZIP作成まで';
+  var backTitle = isApply ? '変更申請管理者報告：台帳CSV読込から台帳更新CSV出力まで' : '公表管理者報告：台帳CSV読込から台帳更新CSV出力まで';
   var frontText = isApply 
     ? '研究課題名・研究責任者などの共通情報を最初に入力し、複数依頼は下のエリアで1件ずつ管理します。'
     : '研究課題名・研究責任者などの共通情報を最初に入力し、複数依頼は下のエリアで1件ずつ管理します。';
   var backText = isApply
-    ? 'CRB承認後は申請管理者報告台帳CSVを読み込み、対象行を選択してCSCC側作業・管理者側格納・送信後の台帳更新までを進めます。研究課題名・研究責任者は台帳CSVから自動で復元されます。'
+    ? 'CRB承認後は変更申請管理者報告台帳CSVを読み込み、対象行を選択してCSCC側作業・管理者側格納・送信後の台帳更新までを進めます。研究課題名・研究責任者は台帳CSVから自動で復元されます。'
     : '決裁後は公表管理者報告台帳CSVを読み込み、対象行を選択してCSCC側作業・管理者側格納・送信後の台帳更新までを進めます。研究課題名・研究責任者は台帳CSVから自動で復元されます。';
   
   document.getElementById('headlineTitle').textContent = front ? frontTitle : backTitle;
