@@ -114,7 +114,7 @@ function reportDocxDataForRow(r) {
     '公表区分_新規': mark(!!initialRow),
     '新規公表日': formatDateToJapanese(initialRow?.date || ''),
     '新規URL': safeDocxText(initialRow?.url || ''),
-    '公表区分_上位変更': (pageMode === 'apply') ? ((changeRow || minorRow) ? '■' : '□') : (changeRow ? '■' : '□'),
+    '公表区分_上位変更': (changeRow || minorRow) ? '■' : '□',
     '公表区分_下位変更': changeRow ? '■' : '□',
     '変更公表日': formatDateToJapanese(changeRow?.date || ''),
     '変更URL': safeDocxText(changeRow?.url || ''),
