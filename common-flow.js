@@ -89,11 +89,11 @@ function combinedDraftReportPrefix() {
 function outputCategory(type) {
   var categoryMap = {
     'apply': {
-      '軽微変更': '申請',
-      '変更': '申請',
+      '軽微変更': '変更',
+      '変更': '変更',
       '定期報告': '定期報告',
-      '一部公表': '申請',
-      '初回公表': '申請',
+      '一部公表': '変更',
+      '初回公表': '変更',
       '不適合報告': '不適合',
       '疾病等報告（医療機器）': '医療機器'
     },
@@ -284,7 +284,7 @@ function folderSetFor(r) {
   });
   var fs = {
     no: no,
-    apply: applyNo + '_' + outType + '_申請',
+    apply: applyNo + '_' + outType + (pageMode === 'apply' ? '' : '_申請'),
     cscc: no + '_' + outType + '(cscc)',
     manager: no + '_' + outType
   };
@@ -410,8 +410,8 @@ function autoEmailDraft() {
   
   // ページモードに応じた設定
   var isApply = (pageMode === 'apply');
-  var categoryLabel = isApply ? '変更' : '報告';
-  var categoryLabelKanji = isApply ? '変更' : '報告';
+  var categoryLabel = isApply ? '承認' : '報告';
+  var categoryLabelKanji = isApply ? '承認' : '報告';
   var dateLabel = isApply ? 'jRCT 申請日未入力' : 'jRCT 公表日未入力';
   var folderLabel = isApply ? '（決裁後に確定する管理者側フォルダパス）' : '（決裁後に確定する管理者側フォルダパス）';
   

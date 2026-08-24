@@ -936,13 +936,13 @@ async function downloadFolderZip() {
     var includeManager = getFolderSelection(i, 'manager');
 
     if (includeApply) {
-      zip.folder(fs.apply).file('.keep', fs.apply + '（申請フォルダ）');
+      zip.folder(fs.apply).file('.keep', fs.apply + '（' + (isApply ? '変更' : '申請') + 'フォルダ）');
     }
 
     var csccFolder = null;
     if (includeCscc) {
       csccFolder = zip.folder(fs.cscc);
-      csccFolder.file('.keep', fs.cscc + '（CSCC側' + (isApply ? '申請' : '公表') + 'フォルダ）');
+      csccFolder.file('.keep', fs.cscc + '（CSCC側' + (isApply ? '変更' : '公表') + 'フォルダ）');
       csccFolder.file(ledgerFileName, '\uFEFF' + ledgerCsv);
 
       if (consolidatedDraftBlob) {
@@ -969,7 +969,7 @@ async function downloadFolderZip() {
         ? csccFolder.folder(fs.manager)
         : zip.folder(fs.manager);
 
-      managerFolder.file('.keep', fs.manager + '（管理者側' + (isApply ? '申請' : '公表') + 'フォルダ）');
+      managerFolder.file('.keep', fs.manager + '（管理者側' + (isApply ? '変更' : '公表') + 'フォルダ）');
       if (r.type === '初回公表' && jrctBlob && jrctName) {
         try {
           managerFolder.file(jrctName, jrctBlob);
@@ -994,7 +994,7 @@ async function downloadFolderZip() {
     var docxNote = (consolidatedDraftBlob || consolidatedReportBlob)
       ? '起案docx・報告案docxを全フォルダに格納、'
       : '（起案docx・報告案docxのひな形が未読込のため、docxは含まれていません）';
-    fileStatuses.zip = '✅ ' + zipName + ' をダウンロードしました（' + docxNote + '台帳CSVはCSCC側' + (isApply ? '申請' : '公表') + 'フォルダに格納）。';
+    fileStatuses.zip = '✅ ' + zipName + ' をダウンロードしました（' + docxNote + '台帳CSVはCSCC側' + (isApply ? '変更' : '公表') + 'フォルダに格納）。';
     if (stages[current].id === 'drafts') renderTemplate();
   } catch(e) {
     fileStatuses.zip = 'ZIP生成に失敗しました：' + e.message;

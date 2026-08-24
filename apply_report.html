@@ -95,9 +95,9 @@ html[data-theme="dark"] body.page-apply{
 </div>
 <script>var pageMode = 'apply';</script>
 <script src="common.js?v=20260811"></script>
-<script src="common-flow.js?v=20260821"></script>
+<script src="common-flow.js?v=20260824"></script>
 <script src="common-csv.js?v=20260819"></script>
-<script src="common-docx.js?v=20260931"></script>
+<script src="common-docx.js?v=20261001"></script>
 <script src="common-ui.js?v=20260821"></script>
 <script src="state.js?v=20260819"></script>
 <script src="utils.js?v=20260811"></script>
@@ -164,9 +164,9 @@ id:'folders',num:2,title:'フォルダ名を確認',
 desc:'ステップ1の依頼行ごとに、申請フォルダ・CSCC側申請フォルダ・管理者側申請フォルダの3種類が自動生成されます。起案番号をそのまま使うため手入力は不要です。',
 tags:['フォルダ名自動生成','3種類を確認','手入力不要'],
 checks:[
-['申請フォルダ名を確認した','例：特2025-17_2-1_申請'],
-['CSCC側申請フォルダ名を確認した','例：特2025-17_2-2_申請(cscc)'],
-['管理者側申請フォルダ名を確認した','例：特2025-17_2-2_申請'],
+['申請フォルダ名を確認した','例：特2025-17_2-1_変更'],
+['CSCC側申請フォルダ名を確認した','例：特2025-17_2-2_変更(cscc)'],
+['管理者側申請フォルダ名を確認した','例：特2025-17_2-2_変更'],
 ],
 notes:[
 ['info','管理者側フォルダの実パス（NAS上の場所）は、ステップ6で最終確定する。'],
@@ -1071,7 +1071,7 @@ jRCT URL：${h(r.url||'')}</div>
       ${rows.map((r,i)=>`<div class="template-card">
         <h4>依頼 ${i+1}：${h(reportTypeLabel(r.type))} / ${h(requestOutputNo(r))}</h4>
         <div class="field"><label>管理者側フォルダパス</label>
-        <input class="input mgr-path-input" data-path-idx="${i}" value="${h(paths[i]||'')}" placeholder="例：\\\\NAS\\\\管理者側\\\\特2025-17_2-2_申請"></div>
+        <input class="input mgr-path-input" data-path-idx="${i}" value="${h(paths[i]||'')}" placeholder="例：\\\\NAS\\\\管理者側\\\\特2025-17_2-2_変更"></div>
       </div>`).join('')}
       <div style="margin-top:.75rem">${checklistHtml()}</div>
       ${ctaHtml()}
@@ -1700,7 +1700,7 @@ const ASSIST_DATA = {
       'ステップ1で入力した内容をもとに、3つのフォルダ名が自動生成されました。',
       '「申請フォルダ」「CSCC側申請フォルダ」「管理者側申請フォルダ」の3つです。',
       'フォルダ名を確認し、問題なければチェックリストにチェックを入れて次に進んでください。',
-      'フォルダ名のルール： 特XXXX-XX-XXXX-X-2_申請(cscc) のような形式になります。'
+      'フォルダ名のルール： 特XXXX-XX-XXXX-X-2_変更(cscc) のような形式になります。'
     ]
   },
   drafts:{
@@ -1733,7 +1733,7 @@ const ASSIST_DATA = {
     title:'保存先パスを確定します',
     steps:[
       '管理者側の申請フォルダに書類を格納したら、そのフォルダのパスを入力します。',
-      '例： \\\\NAS\\管理者側\\特2025-17_2-2_申請',
+      '例： \\\\NAS\\管理者側\\特2025-17_2-2_変更',
       'メール保存ファイル名が自動生成されます。確認してください。'
     ]
   },
