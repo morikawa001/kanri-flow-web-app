@@ -82,16 +82,15 @@ function reportDocxDataForRow(r) {
   var isOther = hasType('その他');
 
   // publish: ステップ1で依頼1=初回公表を選んだときに自動追加される依頼2=変更／依頼3=軽微変更は、
-  // 1回目の初回公表に付随するものとして扱い、公表区分チェックは「新規」のみ■にする。
-  // 依頼4以降で「変更」「軽微変更」が選択された場合は従来ルールに従う。
+  // 1回目の初回公表に付随するものとして扱う。セットが揃っている場合は、公表区分チェックの
+  // 「上位変更」「下位変更」「軽微」は依頼4以降に明示された変更・軽微変更のみで判定する。
   var linkedInitialSet = pageMode === 'publish'
     && relatedRows[0] && relatedRows[0].type === '初回公表'
     && relatedRows[1] && relatedRows[1].type === '変更'
     && relatedRows[2] && relatedRows[2].type === '軽微変更';
-  var restRows = relatedRows.slice(3);
-  var hasRestChange = restRows.some(function(x) { return x && x.type === '変更'; });
-  var hasRestMinor = restRows.some(function(x) { return x && x.type === '軽微変更'; });
-  var suppressLinkedChange = linkedInitialSet && !hasRestChange && !hasRestMinor;
+  var checkboxRows = linkedInitialSet ? relatedRows.slice(3) : relatedRows;
+  var cbChangeRow = checkboxRows.find(function(x) { return x && x.type === '変更'; }) || null;
+  var cbMinorRow = checkboxRows.find(function(x) { return x && x.type === '軽微変更'; }) || null;
 
   return {
     '所属': safeDocxText(getValue('managerAffil1') || ''),
@@ -126,11 +125,11 @@ function reportDocxDataForRow(r) {
     '公表区分_新規': mark(!!initialRow),
     '新規公表日': formatDateToJapanese(initialRow?.date || ''),
     '新規URL': safeDocxText(initialRow?.url || ''),
-    '公表区分_上位変更': (changeRow || minorRow) && !suppressLinkedChange ? '■' : '□',
-    '公表区分_下位変更': changeRow && !suppressLinkedChange ? '■' : '□',
+    '公表区分_上位変更': (cbChangeRow || cbMinorRow) ? '■' : '□',
+    '公表区分_下位変更': cbChangeRow ? '■' : '□',
     '変更公表日': formatDateToJapanese(changeRow?.date || ''),
     '変更URL': safeDocxText(changeRow?.url || ''),
-    '公表区分_軽微': suppressLinkedChange ? mark(false) : ((pageMode === 'apply') ? (minorRow ? '■' : '□') : mark(!!minorRow)),
+    '公表区分_軽微': (pageMode === 'apply') ? (cbMinorRow ? '■' : '□') : mark(!!cbMinorRow),
     '軽微公表日': formatDateToJapanese(minorRow?.date || ''),
     '軽微URL': safeDocxText(minorRow?.url || ''),
     '公表区分_届出外': mark(isTodokedeGai),
