@@ -686,6 +686,8 @@ function validateIntakeRequired(){
     urlFields.forEach(function(el){
       const row=reqRows[+el.dataset.rUrl];
       if(row && jrctRequiredTypes.indexOf(row.type)===-1) return;
+      // 「詳細な内容　別紙のとおり」チェックありの行はjRCT URL未入力でもエラーにしない
+      if(row && row.detailSheet) return;
       if(!mark(el, !String(el.value||'').trim())) ok=false;
     });
   }
