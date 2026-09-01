@@ -116,7 +116,12 @@ function renderRequestRows(hostOverride) {
     var urlField = isApply || hidePubFields
       ? ''
       : '<div class="field" style="margin-top:.7rem"><label>jRCT URL</label>' +
-        '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct...">' +
+        '<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">' +
+        '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct..." style="flex:1 1 240px">' +
+        (pageMode === 'publish' && r.type === '初回公表'
+          ? '<label class="checkitem" style="margin:0;padding:.45rem .65rem;align-items:center"><input type="checkbox" data-r-detail-sheet="' + i + '"' + (r.detailSheet ? ' checked' : '') + '><span style="font-size:.75rem">詳細な内容　別紙のとおり</span></label>'
+          : '') +
+        '</div>' +
         '</div>';
     return '<div class="template-card request-row" style="padding:.8rem;margin-top:.55rem">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.55rem">' +
@@ -217,6 +222,13 @@ function renderRequestRows(hostOverride) {
   bindRowSimple('approval', 'approval');
   bindRowSimple('content', 'content');
   bindRowSimple('notes', 'notes');
+  // 初回公表行の「詳細な内容　別紙のとおり」チェックボックス（publishのみ）
+  primaryHost.querySelectorAll('[data-r-detail-sheet]').forEach(function(el) {
+    el.addEventListener('change', function() {
+      setRequestRow(+el.dataset.rDetailSheet, 'detailSheet', !!el.checked);
+      renderAll();
+    });
+  });
   // 備考の定型文プルダウン（applyのみ・選択内容を備考欄へ反映）
   primaryHost.querySelectorAll('[data-r-notes-preset]').forEach(function(el) {
     el.addEventListener('change', function() {

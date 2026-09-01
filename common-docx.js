@@ -576,6 +576,8 @@ function docxDataForRow(r) {
       var hasIssue = targetRows.some(function(x) { return x?.type && x.type.includes('疾病等'); });
       var pubPairs = [['初回公表', initialRow], ['変更', cbChangeRow], ['軽微変更', cbMinorRow], ['主要評価項目報告書等の通知', mainResultNotifyRow], ['主要評価項目報告書又は総括報告書の概要の公表', summaryPublishRow]].filter(function(arr) { return arr[1]; });
       var parts = [];
+      // publish：依頼1（初回公表）行の「詳細な内容　別紙のとおり」チェックボックスが付いている場合は挿入
+      if (pageMode === 'publish' && initialRow && initialRow.detailSheet) parts.push('詳細な内容　別紙のとおり');
       if (pubPairs.length) {
         var urlLines = pubPairs.map(function(arr) { return arr[0] + '　' + (arr[1]?.url || '').trim(); }).join('\n');
         parts.push('jRCT URL          ' + urlLines);
