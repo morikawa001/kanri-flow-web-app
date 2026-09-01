@@ -119,7 +119,7 @@ function renderRequestRows(hostOverride) {
         '<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">' +
         '<input class="input" data-r-url="' + i + '" value="' + h(r.url || '') + '" placeholder="https://jrct..." style="flex:1 1 240px">' +
         (pageMode === 'publish' && r.type === '初回公表'
-          ? '<label class="checkitem" style="margin:0;padding:.45rem .65rem;align-items:center"><input type="checkbox" data-r-detail-sheet="' + i + '"' + (r.detailSheet ? ' checked' : '') + '><span style="font-size:.75rem">詳細な内容　別紙のとおり</span></label>'
+          ? '<label style="display:inline-flex;align-items:center;gap:.4rem;margin:0;cursor:pointer;white-space:nowrap"><input type="checkbox" data-r-detail-sheet="' + i + '"' + (r.detailSheet ? ' checked' : '') + ' style="width:1rem;height:1rem;accent-color:var(--primary);margin:0;flex:0 0 auto;cursor:pointer"><span style="font-size:.75rem;color:var(--text);line-height:1.1">詳細な内容　別紙のとおり</span></label>'
           : '') +
         '</div>' +
         '</div>';
