@@ -46,6 +46,8 @@ html[data-theme="dark"] body.page-apply{
 .content-check-paren{color:var(--muted);font-size:.78rem;display:inline-flex;align-items:center;gap:.15rem}
 .checkitem.is-sub{padding-left:1.7rem;margin-left:.5rem;background:transparent;border-color:transparent}
 .checkitem.is-sub.checked{background:var(--success-soft);border-color:var(--success)}
+/* 完了パネル：モバイルでは作業エリア側（#templateStage）のみ表示して重複を防ぐ */
+@media(max-width:920px){#mainStage .success-banner{display:none}}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -283,6 +285,19 @@ let templateDocxName = '';
 let reportTemplateDocxBuffer = null;
 let reportTemplateDocxName = '';
 
+// 起案完了パネルを生成（renderMain / renderTemplate で共有）
+function successBannerHtml(){
+  return `
+<div class="success-banner">
+<div style="font-size:3rem">🎉</div>
+<h3>${state.appMode==='front'?'起案完了':'変更申請管理者報告完了'}</h3>
+<p class="small">${state.appMode==='front'
+      ? '台帳CSVひな型とフォルダZIPの作成まで完了しました。'
+      : '台帳CSVの読込から更新済み台帳CSV出力まで完了しました。'}</p>
+<div style="margin-top:1rem"><button class="primary-btn" onclick="resetAll()">新しい案件を開始</button></div>
+</div>`;
+}
+
 function renderMain(){
   syncCurrentToMode();
   const stage=stages[current];
@@ -298,15 +313,8 @@ function renderMain(){
   const allDone=vis.every(s=>done[stages.findIndex(x=>x.id===s.id)]);
   const wrap=document.getElementById('mainStage');
   if(allDone){
-    wrap.innerHTML=`
-<div class="success-banner">
-<div style="font-size:3rem">🎉</div>
-<h3>${state.appMode==='front'?'起案完了':'変更申請管理者報告完了'}</h3>
-<p class="small">${state.appMode==='front'
-      ? '台帳CSVひな型とフォルダZIPの作成まで完了しました。'
-      : '台帳CSVの読込から更新済み台帳CSV出力まで完了しました。'}</p>
-<div style="margin-top:1rem"><button class="primary-btn" onclick="resetAll()">新しい案件を開始</button></div>
-</div>`;return;
+    wrap.innerHTML=successBannerHtml();
+    return;
   }
 
   const standardFields=(stage.fields||[]).filter(f=>!['managerAffil1','managerDept1','managerTitle1','managerName1','managerAffil2','managerDept2','managerTitle2','managerName2'].includes(f.id));
@@ -765,6 +773,16 @@ function renderTemplate(){
   wrap.style.display='';
   const mainEl=document.querySelector('.main');
   if(mainEl) mainEl.style.gridTemplateColumns='';
+
+  // 全ステップ完了時は、操作していた作業エリア（右列）にも完了パネルを表示し、
+  // 「完了する」を押した位置からスクロールせずに完了がわかるようにする
+  const allVisStages=visibleStages();
+  if(allVisStages.every(s=>done[stages.findIndex(x=>x.id===s.id)])){
+    wrap.innerHTML=successBannerHtml();
+    const banner=wrap.querySelector('.success-banner');
+    if(banner) banner.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
 
   function checklistHtml(){
     const attachData=(state.attachmentData||[]).filter(Boolean);
