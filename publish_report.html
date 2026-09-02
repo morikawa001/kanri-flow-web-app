@@ -796,7 +796,6 @@ jRCT番号：${h(getValue('jrctNo')||'')}
         const fs=folderSetFor(r);
         const fd =(k)=> r['folder'+k] || fs[k.toLowerCase()];
         return `<div class="template-card"><h4>依頼 ${i+1}：${h(r.type)}</h4>
-<div class="field" style="margin-top:.4rem"><label>申請フォルダ名（編集可）</label><input class="input" data-folder-name="apply" data-row="${i}" value="${h(fd('Apply'))}"></div>
 <div class="field" style="margin-top:.4rem"><label>CSCC側申請フォルダ名（編集可）</label><input class="input" data-folder-name="cscc" data-row="${i}" value="${h(fd('Cscc'))}"></div>
 <div class="field" style="margin-top:.4rem"><label>管理者側申請フォルダ名（編集可）</label><input class="input" data-folder-name="manager" data-row="${i}" value="${h(fd('Manager'))}"></div>
 </div>`;
