@@ -46,8 +46,8 @@ html[data-theme="dark"] body.page-apply{
 .content-check-paren{color:var(--muted);font-size:.78rem;display:inline-flex;align-items:center;gap:.15rem}
 .checkitem.is-sub{padding-left:1.7rem;margin-left:.5rem;background:transparent;border-color:transparent}
 .checkitem.is-sub.checked{background:var(--success-soft);border-color:var(--success)}
-/* 完了パネル：モバイルでは作業エリア側（#templateStage）のみ表示して重複を防ぐ */
-@media(max-width:920px){#mainStage .success-banner{display:none}}
+/* 完了パネル：上部固定バー（topbar）の下に表示されるようスクロール余白を確保 */
+#mainStage .success-banner{scroll-margin-top:90px}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -774,13 +774,14 @@ function renderTemplate(){
   const mainEl=document.querySelector('.main');
   if(mainEl) mainEl.style.gridTemplateColumns='';
 
-  // 全ステップ完了時は、操作していた作業エリア（右列）にも完了パネルを表示し、
-  // 「完了する」を押した位置からスクロールせずに完了がわかるようにする
+  // 全ステップ完了時は、作業エリアには表示せず上部の完了パネル（#mainStage）1つだけ表示し、
+  // 「完了する」を押したらスクロールせず完了がわかるように上部へ自動スクロールする
   const allVisStages=visibleStages();
   if(allVisStages.every(s=>done[stages.findIndex(x=>x.id===s.id)])){
-    wrap.innerHTML=successBannerHtml();
-    const banner=wrap.querySelector('.success-banner');
-    if(banner) banner.scrollIntoView({behavior:'smooth',block:'center'});
+    wrap.innerHTML='';
+    if(mainEl) mainEl.style.gridTemplateColumns='1fr';
+    const banner=document.querySelector('#mainStage .success-banner');
+    if(banner) banner.scrollIntoView({behavior:'smooth',block:'start'});
     return;
   }
 
