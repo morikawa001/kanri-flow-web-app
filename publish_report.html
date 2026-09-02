@@ -80,7 +80,7 @@ html[data-theme="dark"] body.page-publish{
 <script src="common.js?v=20260811"></script>
 <script src="common-flow.js?v=20260824"></script>
 <script src="common-csv.js?v=20260819"></script>
-<script src="common-docx.js?v=20260905"></script>
+<script src="common-docx.js?v=20260902"></script>
 <script src="common-ui.js?v=20260906"></script>
 <script>
 const stages = [
@@ -874,7 +874,7 @@ jRCT番号：${h(getValue('jrctNo')||'')}
 
     <div class="template-card">
   <h4>依頼一覧・ZIPに含めるフォルダ</h4>
-  <div class="help">依頼ごとに、ZIPへ含める申請フォルダ・CSCC側公表フォルダ・管理者側公表フォルダを選べます。未チェックのフォルダはZIPに含めません。</div>
+  <div class="help">依頼ごとに、ZIPへ含めるCSCC側公表フォルダ・管理者側公表フォルダを選べます。未チェックのフォルダはZIPに含めません。</div>
   <div style="display:grid;gap:.75rem;margin-top:.75rem">
     ${rows.map((r,i)=>{
       const fs = folderSetFor(r);
@@ -890,18 +890,10 @@ jRCT URL：${h(r.url||'')}</div>
 
           <div class="section-title">ZIPに含めるフォルダ</div>
           <div class="checklist">
-            <label class="checkitem ${getFolderSelection(i,'apply') ? 'checked' : ''}">
-              <input type="checkbox" data-folder-sel="${i}-apply" ${getFolderSelection(i,'apply') ? 'checked' : ''}>
-              <div>
-                <strong>① 申請フォルダ</strong>
-                <span>${h(fs.apply)}</span>
-              </div>
-            </label>
-
             <label class="checkitem ${getFolderSelection(i,'cscc') ? 'checked' : ''}">
               <input type="checkbox" data-folder-sel="${i}-cscc" ${getFolderSelection(i,'cscc') ? 'checked' : ''}>
               <div>
-                <strong>② CSCC側公表フォルダ</strong>
+                <strong>① CSCC側公表フォルダ</strong>
                 <span>${h(fs.cscc)}</span>
               </div>
             </label>
@@ -909,13 +901,13 @@ jRCT URL：${h(r.url||'')}</div>
             <label class="checkitem ${getFolderSelection(i,'manager') ? 'checked' : ''}">
               <input type="checkbox" data-folder-sel="${i}-manager" ${getFolderSelection(i,'manager') ? 'checked' : ''}>
               <div>
-                <strong>③ 管理者側公表フォルダ</strong>
+                <strong>② 管理者側公表フォルダ</strong>
                 <span>${h(fs.manager)}</span>
               </div>
             </label>
           </div>
 
-          <div class="help" style="margin-top:.55rem">台帳CSVは、②CSCC側公表フォルダを含めた場合のみ、その中に保存されます。</div>
+          <div class="help" style="margin-top:.55rem">台帳CSVは、①CSCC側公表フォルダを含めた場合のみ、その中に保存されます。</div>
         </div>
       `;
     }).join('')}

@@ -958,7 +958,7 @@ async function downloadFolderZip() {
     var includeCscc = getFolderSelection(i, 'cscc');
     var includeManager = getFolderSelection(i, 'manager');
 
-    if (includeApply) {
+    if (includeApply && pageMode !== 'publish') {
       zip.folder(fs.apply).file('.keep', fs.apply + '（' + (isApply ? '変更' : '申請') + 'フォルダ）');
     }
 
