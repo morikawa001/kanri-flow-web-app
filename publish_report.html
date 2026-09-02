@@ -711,6 +711,8 @@ function renderTemplate(){
   wrap.style.display='';
   const mainEl=document.querySelector('.main');
   if(mainEl) mainEl.style.gridTemplateColumns='';
+  const appEl=document.querySelector('.app');
+  if(appEl) appEl.style.gridTemplateRows='';
 
   // 全ステップ完了時は、作業エリアには表示せず上部の完了パネル（#mainStage）1つだけ表示する
   // （スクロールはレイアウト確定後の renderAll 末尾で行う）
@@ -718,6 +720,7 @@ function renderTemplate(){
   if(allVisStages.every(s=>done[stages.findIndex(x=>x.id===s.id)])){
     wrap.innerHTML='';
     if(mainEl) mainEl.style.gridTemplateColumns='1fr';
+    if(appEl) appEl.style.gridTemplateRows='auto auto auto';
     return;
   }
 
