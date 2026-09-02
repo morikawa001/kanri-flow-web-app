@@ -380,7 +380,6 @@ ${requestRowsData().map((r,i)=>{
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.55rem">
 <strong style="font-size:.82rem">依頼 ${i+1}：${h(r.type)}</strong><span class="badge">${h(`${fs.no}_${outputCategory(r.type)}`)}</span></div>
 <div class="grid-2">
-<div class="field"><label>申請フォルダ名</label><input class="input readonly" readonly value="${h(fs.apply)}"></div>
 <div class="field"><label>CSCC側公表フォルダ名</label><input class="input readonly" readonly value="${h(fs.cscc)}"></div>
 </div>
 <div class="grid-2" style="margin-top:.7rem">
