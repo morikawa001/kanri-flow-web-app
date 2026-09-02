@@ -712,14 +712,12 @@ function renderTemplate(){
   const mainEl=document.querySelector('.main');
   if(mainEl) mainEl.style.gridTemplateColumns='';
 
-  // 全ステップ完了時は、作業エリアには表示せず上部の完了パネル（#mainStage）1つだけ表示し、
-  // 「完了する」を押したらスクロールせず完了がわかるように上部へ自動スクロールする
+  // 全ステップ完了時は、作業エリアには表示せず上部の完了パネル（#mainStage）1つだけ表示する
+  // （スクロールはレイアウト確定後の renderAll 末尾で行う）
   const allVisStages=visibleStages();
   if(allVisStages.every(s=>done[stages.findIndex(x=>x.id===s.id)])){
     wrap.innerHTML='';
     if(mainEl) mainEl.style.gridTemplateColumns='1fr';
-    const banner=document.querySelector('#mainStage .success-banner');
-    if(banner) banner.scrollIntoView({behavior:'smooth',block:'start'});
     return;
   }
 
@@ -1602,6 +1600,13 @@ function renderAll(){
   updateModeUI();
   updateNavBtn();
   renderAssistPopup();
+  // 全ステップ完了時は、レイアウト確定後に完了パネル（#mainStage）へ即時スクロールし、
+  // applyと同じ上部位置に揃える（途中のレイアウト変化でスムーススクロールが止まるのを防ぐ）
+  const allDone=visibleStages().every(s=>done[stages.findIndex(x=>x.id===s.id)]);
+  if(allDone){
+    const banner=document.querySelector('#mainStage .success-banner');
+    if(banner) banner.scrollIntoView({block:'start'});
+  }
 }
 // メール本文の「（jRCT 公表日未入力）」には台帳の公表日データを差し込む
 // 「（決裁後に確定する管理者側フォルダパス）」には現在のパスを自動反映する
